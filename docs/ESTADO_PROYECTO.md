@@ -206,7 +206,7 @@ Qué queda para otras tareas (el servicio lo rechaza con un mensaje claro):
   reactiva si su transferencia está vigente.
 - **Tarea 12:** registrar y corregir ajustes. Anularlos y reactivarlos ya funciona (RN-54).
 
-Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
+Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026** (sección 6, P-20 a P-24):
 - **Una sola ruta para ingresos y egresos** (`POST /api/movimientos` con `tipo`), en lugar de dos.
 - **El filtro por categoría incluye sus subcategorías**, y **el filtro por cuenta incluye las
   transferencias que entran** a ella. El historial muestra los anulados salvo que se filtre por estado.
@@ -245,7 +245,7 @@ Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
 | 14 | Resumen financiero e indicadores | Pendiente | RF-13, RF-15 |
 | 15 | Datos de prueba y pruebas de CA-01 a CA-15 | Pendiente | `REQUISITOS.md`, sección 4 |
 
-**Siguiente paso recomendado:** confirmar las cinco decisiones de la sección 3.8 y luego la Tarea 11 (transferencias con cargos).
+**Siguiente paso recomendado:** Tarea 11 (transferencias con cargos), cuando el estudiante la apruebe.
 
 ## 6. Decisiones confirmadas por el estudiante (17 y 22 de noviembre de 2026)
 
@@ -272,6 +272,11 @@ Ya no hay decisiones abiertas.
 | P-17 | ¿Se renombra una categoría desactivada? (22/11) | No: primero se reactiva. | `CategoriaServicio.renombrar` |
 | P-18 | ¿Qué pasa si al renombrar llegan `tipo` o `id_padre`? (22/11) | Se responde 400; no se ignoran. | `PUT /api/categorias/<id>` |
 | P-19 | ¿"Impuestos y comisiones" tiene protección especial? (22/11) | No: se renombra o desactiva como cualquier otra. | RN-26 |
+| P-20 | ¿Una ruta o dos para ingresos y egresos? (22/11) | Una: `POST /api/movimientos` con `tipo`. | `app/rutas/movimientos.py` |
+| P-21 | ¿Qué incluyen los filtros del historial? (22/11) | Categoría: también sus subcategorías. Cuenta: también las transferencias que entran. Los anulados se muestran salvo que se filtre por estado. | `MovimientoRepositorio.listar` |
+| P-22 | ¿Corregir o reactivar exige que la categoría siga activa? (22/11) | No, si la categoría no cambia: no es un movimiento nuevo. Una categoría nueva sí debe estar activa. | `MovimientoServicio.corregir` y `reactivar` |
+| P-23 | ¿Se aceptan fechas futuras? (22/11) | Sí. | `MovimientoServicio` |
+| P-24 | ¿El historial tiene paginación? (22/11) | No: devuelve todos los que cumplen los filtros. | `GET /api/movimientos` |
 
 D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 4 con dos roles:
 `financia_admin` (migraciones) y `financia_app` (aplicación).
@@ -303,3 +308,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Tarea 9: categorías (`RamaCategoria`, `CategoriaRepositorio` ampliado, `CategoriaServicio`, rutas `/api/categorias`); `tests/test_categorias.py`. Servidor probado. **287 pruebas pasan.** |
 | 2026-11-22 | Confirmadas P-15 a P-19 (categorías: desactivar con subcategorías, reactivar una a una, desactivada no se renombra, 400 si llegan tipo o padre, sin protección especial para "Impuestos y comisiones"). |
 | 2026-11-22 | Tarea 10: ingresos, egresos e historial (`Movimiento`, `MovimientoRepositorio`, `MovimientoServicio`, rutas `/api/movimientos`, `FOR SHARE` en cuentas y categorías); `tests/test_movimientos.py` con carreras reales y pruebas de mutación. Servidor probado. **360 pruebas pasan.** |
+| 2026-11-22 | Confirmadas P-20 a P-24 (una ruta para ingresos y egresos, filtros del historial, categoría desactivada en correcciones y reactivaciones, fechas futuras, sin paginación). |
