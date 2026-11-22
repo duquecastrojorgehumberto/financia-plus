@@ -1,11 +1,19 @@
-"""Crea el archivo .env, el rol financia_admin y las bases financia y financia_pruebas.
+"""Crea el archivo .env, los roles financia_admin y financia_app y las bases financia y financia_pruebas.
 
 Lo ejecuta scripts/preparar_windows.ps1; también se puede ejecutar solo.
 Necesita la contraseña del superusuario "postgres" en la variable de entorno
 FINANCIA_CLAVE_POSTGRES (el script de Windows la pide y la pasa sin guardarla).
 
-Es seguro ejecutarlo varias veces: lo que ya existe no se vuelve a crear y
-nunca se borra nada.
+Los dos roles (D-15):
+  * financia_admin: dueño de las bases y de las tablas; aplica las migraciones.
+    Su contraseña sale de DATABASE_URL_MIGRACIONES.
+  * financia_app: con el que se conecta la aplicación. NO es dueño de nada;
+    sus permisos (sin DELETE) los otorga la migración 0002. Su contraseña
+    sale de DATABASE_URL.
+
+Es seguro ejecutarlo varias veces: lo que ya existe no se vuelve a crear (a los
+roles solo se les actualiza la contraseña para que coincida con .env) y nunca
+se borra nada.
 """
 
 import os
@@ -22,6 +30,7 @@ RAIZ = pathlib.Path(__file__).resolve().parent.parent
 ENV = RAIZ / ".env"
 BASES = ("financia", "financia_pruebas")
 ROL_ADMIN = "financia_admin"
+ROL_APP = "financia_app"
 
 
 def crear_env() -> None:
@@ -39,6 +48,19 @@ def crear_env() -> None:
     print(".env creado con claves aleatorias (no se sube al repositorio).")
 
 
+def crear_o_actualizar_rol(con, rol: str, clave: str) -> None:
+    """Crea el rol con LOGIN y contraseña o, si ya existe, le pone esa contraseña.
+
+    El nombre va con sql.Identifier y la clave con sql.Literal: psycopg los
+    escapa correctamente (CREATE ROLE no admite parámetros %s).
+    """
+    existe = con.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", (rol,)).fetchone()
+    accion = "ALTER" if existe else "CREATE"
+    con.execute(sql.SQL(accion + " ROLE {} LOGIN PASSWORD {}").format(
+        sql.Identifier(rol), sql.Literal(clave)))
+    print(f"Rol {rol}: {'actualizado' if existe else 'creado'}.")
+
+
 def main() -> int:
     clave_postgres = os.environ.get("FINANCIA_CLAVE_POSTGRES")
     if not clave_postgres:
@@ -46,8 +68,13 @@ def main() -> int:
         return 1
 
     crear_env()
-    url_admin = dotenv_values(ENV)["DATABASE_URL_MIGRACIONES"]
-    clave_admin = urlparse(url_admin).password
+    valores = dotenv_values(ENV)
+    clave_admin = urlparse(valores["DATABASE_URL_MIGRACIONES"]).password
+    url_app = urlparse(valores["DATABASE_URL"])
+    if url_app.username != ROL_APP or not url_app.password:
+        print(f"DATABASE_URL en .env debe usar el usuario {ROL_APP} y tener contraseña.")
+        return 1
+    clave_app = url_app.password
 
     try:
         con = psycopg.connect(host="localhost", port=5432, user="postgres",
@@ -58,11 +85,8 @@ def main() -> int:
         return 1
 
     with con:
-        existe = con.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", (ROL_ADMIN,)).fetchone()
-        accion = "ALTER" if existe else "CREATE"
-        con.execute(sql.SQL(accion + " ROLE {} LOGIN PASSWORD {}").format(
-            sql.Identifier(ROL_ADMIN), sql.Literal(clave_admin)))
-        print(f"Rol {ROL_ADMIN}: {'actualizado' if existe else 'creado'}.")
+        crear_o_actualizar_rol(con, ROL_ADMIN, clave_admin)
+        crear_o_actualizar_rol(con, ROL_APP, clave_app)
 
         for base in BASES:
             if con.execute("SELECT 1 FROM pg_database WHERE datname = %s", (base,)).fetchone():

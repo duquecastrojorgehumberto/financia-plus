@@ -1,23 +1,28 @@
 # tests/
 
-**Estado: `test_restricciones_bd.py` y `conftest.py` están escritos y revisados a mano.
-Todavía no se han ejecutado.** No hay más pruebas.
+**Estado: todas las pruebas de esta carpeta se ejecutan y pasan.**
 
 Pruebas con `pytest` contra una base PostgreSQL de pruebas (`DATABASE_URL_PRUEBAS`).
 
 | Archivo | Qué prueba | Estado |
 | --- | --- | --- |
-| `conftest.py` | Conexión a la base de pruebas; cada prueba termina en ROLLBACK | Escrito, sin ejecutar |
-| `test_restricciones_bd.py` | Que la base rechaza lo que debe rechazar y acepta lo que debe aceptar (Tarea 5) | Escrito, sin ejecutar |
+| `conftest.py` | Conexiones a la base de pruebas: `con` (rol dueño) y `con_app` (rol `financia_app`). Cada prueba termina en ROLLBACK | Funciona |
+| `test_restricciones_bd.py` | Que la base rechaza lo que debe rechazar y acepta lo que debe aceptar (Tarea 5) | Pasa |
+| `test_permisos_bd.py` | Que `financia_app` no puede borrar ni modificar el historial de bolsillos (Tarea 4, D-15) | Pasa |
 | `test_cuentas.py`, `test_movimientos.py`, `test_transferencias.py`, `test_bolsillos.py`, `test_resumen.py` | Servicios y criterios CA-01 a CA-15 | Pendiente |
 
-## Cómo ejecutarlas (cuando el entorno esté listo)
+## Cómo ejecutarlas
 
-1. Crear una base de pruebas vacía y aplicarle `db/migraciones/0001_esquema_inicial.sql`.
-2. Definir `DATABASE_URL_PRUEBAS` con un rol dueño de las tablas.
-3. `pytest tests/test_restricciones_bd.py -v`
+Desde la carpeta del proyecto:
 
-Sin `DATABASE_URL_PRUEBAS`, las pruebas se omiten en lugar de fallar.
+```powershell
+.venv\Scripts\python -m pytest tests -q
+```
+
+Requisitos: la base de pruebas con todas las migraciones aplicadas
+(`.venv\Scripts\python scripts\migrar.py --variable DATABASE_URL_PRUEBAS`) y el archivo
+`.env` con `DATABASE_URL_PRUEBAS` y `DATABASE_URL`. Sin esas variables, las pruebas se
+omiten en lugar de fallar.
 
 ## Convenciones
 
