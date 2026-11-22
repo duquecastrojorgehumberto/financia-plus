@@ -335,7 +335,7 @@ Verificado:
   aparte (600) y Alimentación consolidada. Datos de la verificación eliminados.
 - Las pruebas dejan la base de pruebas vacía.
 
-Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
+Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026** (sección 6, P-40 a P-44):
 - **Una sola ruta** (`GET /api/resumen`) devuelve los indicadores y el resumen del periodo.
 - **Sin fechas, el periodo es el mes actual completo** (del día 1 al último día).
 - **Los indicadores son del momento actual**: no dependen del periodo elegido.
@@ -373,7 +373,7 @@ Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
 | 14 | Resumen financiero e indicadores | **Hecho: 23 pruebas; servidor probado** | RF-13, RF-15 |
 | 15 | Datos de prueba y pruebas de CA-01 a CA-15 | Pendiente (**esperando aprobación**). Las pruebas de CA-01 a CA-15 ya existen y pasan; falta el archivo de datos de prueba. | `REQUISITOS.md`, sección 4 |
 
-**Siguiente paso recomendado:** confirmar las cinco decisiones de la sección 3.12 y luego la Tarea 15 (datos de prueba y cierre).
+**Siguiente paso recomendado:** Tarea 15 (datos de prueba y cierre), cuando el estudiante la apruebe.
 
 ## 6. Decisiones confirmadas por el estudiante (17 y 22 de noviembre de 2026)
 
@@ -420,6 +420,11 @@ Ya no hay decisiones abiertas.
 | P-37 | ¿El detalle trae el historial? (22/11) | Sí, completo, del más reciente al más antiguo. | `GET /api/bolsillos/<id>` |
 | P-38 | ¿Qué responde cambiar al mismo valor? (22/11) | 200 con `"registrado": false` (201 si se agrega un registro). | `POST /api/bolsillos/<id>/valor` |
 | P-39 | ¿La fecha objetivo puede estar en el pasado? (22/11) | Sí. | `BolsilloServicio` |
+| P-40 | ¿Una ruta o varias para el resumen? (22/11) | Una: `GET /api/resumen` con indicadores y periodo. | `app/rutas/resumen.py` |
+| P-41 | ¿Periodo por defecto? (22/11) | El mes actual completo. | `ResumenServicio.periodo` |
+| P-42 | ¿Los indicadores dependen del periodo? (22/11) | No: son del momento actual. | `ResumenServicio.indicadores` |
+| P-43 | ¿Qué categorías aparecen en el resumen? (22/11) | Solo las que tienen movimientos en el periodo, de mayor a menor, con su parte "directo" separada de sus subcategorías. | `ResumenServicio` |
+| P-44 | ¿El balance incluye los ajustes? (22/11) | No: ingresos − egresos; los ajustes van aparte (RN-53). | `ResumenPeriodo.balance` |
 
 D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 4 con dos roles:
 `financia_admin` (migraciones) y `financia_app` (aplicación).
@@ -459,3 +464,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Tarea 13: bolsillos y metas (`Bolsillo`, `BolsilloConValor`, `BolsilloRepositorio` con `DISTINCT ON`, `BolsilloServicio`, rutas `/api/bolsillos`); `tests/test_bolsillos.py` con CA-07, CA-08, CA-09 y prueba de mutación del desempate. Servidor probado. **483 pruebas pasan.** |
 | 2026-11-22 | Confirmadas P-34 a P-39 (bolsillos: archivado no se edita, PUT reemplaza todo, progreso en porcentaje, detalle con historial, 200 sin cambio, fecha objetivo libre). |
 | 2026-11-22 | Tarea 14: resumen financiero e indicadores (`ResumenRepositorio`, `ResumenServicio`, `GET /api/resumen`); `tests/test_resumen.py` con CA-10 y CA-12 y pruebas de mutación. Servidor probado. **506 pruebas pasan.** |
+| 2026-11-22 | Confirmadas P-40 a P-44 (resumen: una ruta, mes actual por defecto, indicadores del momento, solo categorías con movimientos, balance sin ajustes). |
