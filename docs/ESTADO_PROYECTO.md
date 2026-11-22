@@ -240,7 +240,7 @@ Verificado:
   rechazado y reactivar. Datos de la verificación eliminados.
 - Las pruebas dejan la base de pruebas vacía.
 
-Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
+Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026** (sección 6, P-25 a P-28):
 - **Reactivar una transferencia no reactiva sus cargos**: cada uno se reactiva aparte en
   `/api/movimientos/<id>/reactivar`. Al anular no se guarda cuáles cargos ya estaban anulados a
   propósito, y reactivarlos todos podría revivir uno de esos.
@@ -279,7 +279,7 @@ Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
 | 14 | Resumen financiero e indicadores | Pendiente | RF-13, RF-15 |
 | 15 | Datos de prueba y pruebas de CA-01 a CA-15 | Pendiente | `REQUISITOS.md`, sección 4 |
 
-**Siguiente paso recomendado:** confirmar las cuatro decisiones de la sección 3.9 y luego la Tarea 12 (ajustes de saldo).
+**Siguiente paso recomendado:** Tarea 12 (ajustes de saldo), cuando el estudiante la apruebe.
 
 ## 6. Decisiones confirmadas por el estudiante (17 y 22 de noviembre de 2026)
 
@@ -311,6 +311,10 @@ Ya no hay decisiones abiertas.
 | P-22 | ¿Corregir o reactivar exige que la categoría siga activa? (22/11) | No, si la categoría no cambia: no es un movimiento nuevo. Una categoría nueva sí debe estar activa. | `MovimientoServicio.corregir` y `reactivar` |
 | P-23 | ¿Se aceptan fechas futuras? (22/11) | Sí. | `MovimientoServicio` |
 | P-24 | ¿El historial tiene paginación? (22/11) | No: devuelve todos los que cumplen los filtros. | `GET /api/movimientos` |
+| P-25 | ¿Reactivar una transferencia reactiva sus cargos? (22/11) | No: cada cargo se reactiva aparte. | `TransferenciaServicio.reactivar` |
+| P-26 | ¿Corregir la fecha de una transferencia cambia la de sus cargos? (22/11) | Sí (RN-35). Corregir el monto no toca los cargos. | `TransferenciaServicio.corregir` |
+| P-27 | ¿Se puede agregar un cargo a una transferencia ya registrada? (22/11) | Sí. | `POST /api/transferencias/<id>/cargos` |
+| P-28 | ¿La API propone "Impuestos y comisiones" para los cargos? (22/11) | No: la interfaz la busca por nombre y la preselecciona. | Interfaz (`frontend/`) |
 
 D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 4 con dos roles:
 `financia_admin` (migraciones) y `financia_app` (aplicación).
@@ -344,3 +348,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Tarea 10: ingresos, egresos e historial (`Movimiento`, `MovimientoRepositorio`, `MovimientoServicio`, rutas `/api/movimientos`, `FOR SHARE` en cuentas y categorías); `tests/test_movimientos.py` con carreras reales y pruebas de mutación. Servidor probado. **360 pruebas pasan.** |
 | 2026-11-22 | Confirmadas P-20 a P-24 (una ruta para ingresos y egresos, filtros del historial, categoría desactivada en correcciones y reactivaciones, fechas futuras, sin paginación). |
 | 2026-11-22 | Tarea 11: transferencias con cargos (`TransferenciaServicio`, `VerificadorDeUso`, `TransferenciaConCargos`, rutas `/api/transferencias`); `tests/test_transferencias.py` con CA-02, CA-03 y CA-04 y prueba de mutación de la transacción. Servidor probado. **413 pruebas pasan.** |
+| 2026-11-22 | Confirmadas P-25 a P-28 (reactivar transferencia sin sus cargos, la fecha de los cargos sigue a la transferencia, agregar cargos después, la interfaz preselecciona "Impuestos y comisiones"). |
