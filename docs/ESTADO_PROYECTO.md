@@ -16,7 +16,7 @@ para la sustentación. Lo único que falta es la interfaz React, que se hace en 
 | --- | --- |
 | **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); ingresos, egresos e historial (Tarea 10); transferencias con cargos (Tarea 11); ajustes de saldo (Tarea 12); bolsillos (Tarea 13); resumen (Tarea 14); datos de prueba (Tarea 15); 522 pruebas. |
 | **Documentado** | Requisitos (17 RF, 10 RNF, 15 criterios), arquitectura, modelo de datos (6 tablas), reglas de negocio, 21 decisiones (todas confirmadas), auditoría del diseño anterior, categorías por defecto, guía de continuidad, instalación y uso diario en `README.md`. |
-| **Pendiente** | Ninguna tarea de la guía. Interfaz: faltan las pantallas de movimientos, transferencias, ajustes y bolsillos. | La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
+| **Pendiente** | Ninguna tarea de la guía. Interfaz: faltan las pantallas de transferencias, ajustes y bolsillos. | La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
 
 ## 3. Detalle de lo hecho
 
@@ -457,9 +457,40 @@ demostración se borraron al terminar; `financia` no se tocó):
   desactivada de los datos de demostración se pudo reactivar.
 - Vista de celular (375 px) sin desbordamiento.
 
+### 3.17 Interfaz React, paso 4: movimientos
+
+| Pieza | Qué hace |
+| --- | --- |
+| `frontend/src/paginas/Movimientos.tsx` | Historial con filtros (fechas, cuenta, tipo, categoría con sus subcategorías, estado); registrar ingresos y egresos; corregir, anular y reactivar. |
+| `frontend/src/api/movimientos.ts` | Una función por ruta de `/api/movimientos`; solo envía los filtros que tienen valor. |
+| `frontend/src/componentes/SelectorCategoria.tsx` | Lista de categorías reutilizable ("Alimentación › Mercado"); la raíz también se puede elegir. |
+| `frontend/src/util/movimientos.ts` | Monto con signo según el tipo, nombre del tipo ("Cargo de transferencia") y qué botones ofrecer. 14 pruebas nuevas (43 en total). |
+
+El historial muestra todos los tipos y también los anulados (CA-13, tachados). Los botones siguen lo
+que permite la API en esta ruta: corregir solo ingresos y egresos vigentes que no sean cargos;
+anular y reactivar todo menos las transferencias, que van con sus cargos (RN-38) en su propia
+pantalla. El formulario ofrece solo cuentas y categorías activas; al corregir también muestra las
+que el movimiento ya tiene, porque la API conserva una categoría desactivada si no cambia.
+
+Verificado en el navegador con Ana, contra una API conectada a `financia_pruebas` (los datos de
+demostración se borraron al terminar; `financia` no se tocó):
+- Historial: 10 movimientos de todos los tipos, con los anulados visibles; los montos con signo.
+- Registrar un egreso de "25000,5" en Nequi › Mercado: aparece primero como −$ 25.000,50; la fecha
+  viene con el día de hoy. En la pestaña Ingreso solo aparecen categorías de ingreso.
+- Corregir: el formulario trae los datos y no deja cambiar el tipo; a 26.000 y Restaurantes, guardado.
+- Anular: queda tachado y sin "Corregir"; reactivar lo devuelve.
+- Reactivar el cargo de una transferencia anulada: "Este cargo pertenece a una transferencia
+  anulada. Reactive primero la transferencia."
+- Corregir "Veterinario" (categoría Mascotas desactivada después): la muestra como
+  "(desactivada)" y la API lo acepta porque la categoría no cambia.
+- Filtro Egreso + Alimentación: incluye Mercado, Restaurantes y Alimentación directo. Fechas al
+  revés: "La fecha inicial no puede ser posterior a la fecha final."
+- El resumen refleja el egreso nuevo: egresos 116.800 y saldo total 1.006.700 (26.000 más y menos).
+- Vista de celular (375 px) sin desbordamiento.
+
 ## 4. Lo que NO existe todavía
 
-- Las demás pantallas de la interfaz: movimientos, transferencias, ajustes y bolsillos. La API ya ofrece todo lo que necesitan (sección de rutas en `README.md`).
+- Las demás pantallas de la interfaz: transferencias, ajustes y bolsillos. La API ya ofrece todo lo que necesitan (sección de rutas en `README.md`).
 - Lo aplazado por decisión del proyecto (`REQUISITOS.md`, sección 3): facturas, Gmail,
   presupuestos, recurrentes, tarjetas, renta, notificaciones, auditoría, varias categorías.
 - El repositorio Git no tiene remoto (no se ha subido a GitHub).
@@ -588,3 +619,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Interfaz React, paso 1 (`frontend/`): Vite + React + TypeScript, cliente de la API, sesión (registro, inicio y cierre) y pantalla de resumen. Probada en el navegador contra la API real. |
 | 2026-11-22 | Interfaz React, paso 2: pantalla de cuentas (crear, editar, archivar, reactivar) y campo de dinero reutilizable. Probada en el navegador contra la base de pruebas. |
 | 2026-11-22 | Interfaz React, paso 3: pantalla de categorías (árbol por tipo, crear, renombrar, desactivar y reactivar). Probada en el navegador contra la base de pruebas. |
+| 2026-11-22 | Interfaz React, paso 4: pantalla de movimientos (historial con filtros, registrar, corregir, anular y reactivar). Probada en el navegador contra la base de pruebas. |

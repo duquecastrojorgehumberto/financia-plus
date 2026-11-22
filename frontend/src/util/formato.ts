@@ -50,3 +50,10 @@ export function dineroParaCampo(valor: string): string {
 export function esDineroValido(texto: string): boolean {
   return /^\d+(\.\d{1,2})?$/.test(dineroParaEnviar(texto));
 }
+
+/** La fecha de hoy en el computador del usuario, como "AAAA-MM-DD" (no en UTC). */
+export function hoy(ahora: Date = new Date()): string {
+  const mes = String(ahora.getMonth() + 1).padStart(2, "0");
+  const dia = String(ahora.getDate()).padStart(2, "0");
+  return `${ahora.getFullYear()}-${mes}-${dia}`;
+}

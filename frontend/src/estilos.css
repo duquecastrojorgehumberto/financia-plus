@@ -502,6 +502,90 @@ a:focus-visible {
   flex-basis: 100%;
 }
 
+/* ---------- Movimientos ---------- */
+
+.filtros {
+  margin: 1rem 0;
+}
+
+.campo-ancho {
+  grid-column: 1 / -1;
+}
+
+.lista-movimientos {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+
+.movimiento {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 0.25rem 1rem;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.movimiento:last-child {
+  border-bottom: none;
+}
+
+.movimiento-datos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.movimiento-titulo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow-wrap: anywhere;
+}
+
+.movimiento-monto {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.movimiento-monto.positivo {
+  color: var(--color-principal);
+}
+
+.movimiento-monto.negativo {
+  color: var(--color-negativo);
+}
+
+.movimiento .acciones {
+  gap: 0;
+  justify-content: flex-end;
+  min-width: 9.5rem;   /* así los montos quedan alineados aunque una fila no tenga botones */
+}
+
+.movimiento.anulado .movimiento-datos,
+.movimiento.anulado .movimiento-monto {
+  opacity: 0.55;
+}
+
+.movimiento.anulado .movimiento-monto {
+  text-decoration: line-through;   /* sigue visible, pero no cuenta (RN-70) */
+}
+
+@media (max-width: 600px) {
+  .movimiento {
+    grid-template-columns: 1fr auto;
+  }
+
+  .movimiento .acciones {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+}
+
 @media (max-width: 600px) {
   .encabezado {
     gap: 0.75rem;

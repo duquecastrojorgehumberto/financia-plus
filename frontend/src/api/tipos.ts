@@ -93,3 +93,46 @@ export interface Categoria {
 export interface RamaCategoria extends Categoria {
   subcategorias: Categoria[];
 }
+
+export type TipoMovimiento = "INGRESO" | "EGRESO" | "TRANSFERENCIA" | "AJUSTE_AUMENTO" | "AJUSTE_DISMINUCION";
+
+/** Solo VIGENTE cuenta en saldos y totales (RN-70). */
+export type EstadoMovimiento = "VIGENTE" | "ANULADO";
+
+/** Un movimiento del historial, con los nombres de su cuenta y categoría. */
+export interface Movimiento {
+  id_movimiento: number;
+  tipo: TipoMovimiento;
+  estado: EstadoMovimiento;
+  fecha: string;
+  monto: Dinero;
+  descripcion: string | null;
+  id_cuenta: number;
+  nombre_cuenta: string;
+  id_cuenta_destino: number | null;       // solo en una TRANSFERENCIA
+  nombre_cuenta_destino: string | null;
+  id_categoria: number | null;            // null en transferencias y ajustes
+  nombre_categoria: string | null;
+  id_transferencia: number | null;        // en un EGRESO: es un cargo de esa transferencia (RN-34)
+  creado_en: string;
+  actualizado_en: string;
+}
+
+/** Lo que se envía para registrar o corregir un ingreso o egreso. */
+export interface DatosMovimiento {
+  id_cuenta: number;
+  id_categoria: number;
+  monto: Dinero;
+  fecha: string;
+  descripcion: string;
+}
+
+/** Filtros opcionales del historial (RF-14). */
+export interface FiltroHistorial {
+  desde?: string;
+  hasta?: string;
+  id_cuenta?: number;
+  tipo?: TipoMovimiento;
+  id_categoria?: number;
+  estado?: EstadoMovimiento;
+}

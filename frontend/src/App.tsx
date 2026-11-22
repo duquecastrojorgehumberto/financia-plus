@@ -4,9 +4,10 @@
 //   /                  Resumen             con sesión (RutaProtegida), dentro de la Plantilla
 //   /cuentas           Cuentas             con sesión
 //   /categorias        Categorias          con sesión
+//   /movimientos       Movimientos         con sesión
 //
-// Las pantallas de movimientos, transferencias, ajustes y
-// bolsillos se agregarán aquí, también dentro de RutaProtegida y Plantilla.
+// Las pantallas de transferencias, ajustes y bolsillos se agregarán aquí,
+// también dentro de RutaProtegida y Plantilla.
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 
 import { Plantilla } from "./componentes/Plantilla";
@@ -14,6 +15,7 @@ import { RutaProtegida } from "./componentes/RutaProtegida";
 import { Categorias } from "./paginas/Categorias";
 import { Cuentas } from "./paginas/Cuentas";
 import { IniciarSesion } from "./paginas/IniciarSesion";
+import { Movimientos } from "./paginas/Movimientos";
 import { Registro } from "./paginas/Registro";
 import { Resumen } from "./paginas/Resumen";
 import { ProveedorSesion } from "./sesion/ContextoSesion";
@@ -30,6 +32,7 @@ export function App() {
               <Route path="/" element={<Resumen />} />
               <Route path="/cuentas" element={<Cuentas />} />
               <Route path="/categorias" element={<Categorias />} />
+              <Route path="/movimientos" element={<Movimientos />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
