@@ -26,3 +26,27 @@ export function formatearFecha(fecha: string): string {
   const [anio, mes, dia] = fecha.split("-");
   return `${Number(dia)} ${MESES[Number(mes) - 1]} ${anio}`;
 }
+
+// ---------------------------------------------------------------------------
+// Dinero que escribe el usuario en un campo
+// ---------------------------------------------------------------------------
+// En Colombia se escribe "150000,50"; la API espera "150000.50". Estas funciones
+// solo cambian la coma por punto (y al revés), sin convertir a número. Los puntos
+// de miles NO se aceptan: "1.000" sería ambiguo (¿mil o uno?). Si el texto no es
+// válido se envía igual y la API responde el mensaje de error.
+
+/** "150000,50" → "150000.50"   " 2000 " → "2000"   (texto para enviar a la API) */
+export function dineroParaEnviar(texto: string): string {
+  return texto.trim().replace(",", ".");
+}
+
+/** "130000.00" → "130000"   "130000.50" → "130000,50"   (valor de la API para un campo) */
+export function dineroParaCampo(valor: string): string {
+  const [entero, decimales = ""] = valor.split(".");
+  return /^0*$/.test(decimales) ? entero : `${entero},${decimales}`;
+}
+
+/** true si el texto del campo es un monto bien escrito: dígitos y hasta 2 decimales. */
+export function esDineroValido(texto: string): boolean {
+  return /^\d+(\.\d{1,2})?$/.test(dineroParaEnviar(texto));
+}

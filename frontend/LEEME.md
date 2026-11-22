@@ -1,8 +1,8 @@
 # frontend/ — Interfaz React
 
-**Estado:** paso 1 hecho — base del proyecto, conexión con la API, registro, inicio y cierre de
-sesión, y la pantalla de **resumen**. Faltan las pantallas de cuentas, categorías, movimientos,
-transferencias, ajustes y bolsillos (la API ya las ofrece: ver la tabla de rutas en `README.md`).
+**Estado:** pasos 1 y 2 hechos — base del proyecto, conexión con la API, registro, inicio y
+cierre de sesión, y las pantallas de **resumen** y **cuentas**. Faltan las pantallas de
+categorías, movimientos, transferencias, ajustes y bolsillos (la API ya las ofrece: ver la tabla de rutas en `README.md`).
 
 React + Vite + TypeScript (decisión D-21), con React Router para las pantallas y CSS propio,
 sin librerías de componentes. Consume la API JSON de Flask bajo `/api/`.
@@ -54,6 +54,13 @@ El navegador le pide todo a Vite (`localhost:5173`); Vite **reenvía** a Flask (
 lo que empieza por `/api` (proxy en `vite.config.ts`). Así interfaz y API comparten origen: la
 cookie de sesión funciona sin CORS y `SameSite=Lax` sigue protegiendo (ARQUITECTURA.md, sección 6).
 
+Para usar otra API (por ejemplo, una conectada a la base de pruebas en el puerto 5001), se
+define `FINANCIA_API` antes de arrancar:
+
+```powershell
+$env:FINANCIA_API = "http://127.0.0.1:5001"; npm run dev
+```
+
 ## Archivos
 
 | Archivo | Qué hace |
@@ -63,18 +70,21 @@ cookie de sesión funciona sin CORS y `SameSite=Lax` sigue protegiendo (ARQUITEC
 | `src/App.tsx` | Qué pantalla muestra cada dirección (React Router). |
 | `src/api/cliente.ts` | **Todas** las peticiones pasan por aquí: JSON, cookie, encabezado CSRF `X-Requested-With: financia` y errores (`ErrorApi` con el mensaje en español de la API). |
 | `src/api/tipos.ts` | Tipos de TypeScript con la forma exacta del JSON de la API. |
-| `src/api/sesion.ts`, `src/api/resumen.ts` | Una función por llamada a la API. |
+| `src/api/sesion.ts`, `src/api/resumen.ts`, `src/api/cuentas.ts` | Una función por llamada a la API. |
 | `src/sesion/ContextoSesion.tsx` | Quién tiene la sesión (contexto de React). Se lo pregunta al servidor al abrir la página; no guarda nada en el navegador. |
 | `src/componentes/RutaProtegida.tsx` | Sin sesión, lleva a "Iniciar sesión". La protección real está en la API (401). |
 | `src/componentes/Plantilla.tsx` | Encabezado, menú y "Cerrar sesión" de las pantallas con sesión. |
 | `src/paginas/IniciarSesion.tsx`, `Registro.tsx` | Formularios de sesión; el botón se deshabilita mientras espera (evita el doble envío). |
+| `src/componentes/CampoDinero.tsx` | Campo para escribir dinero (texto, no número). Debajo muestra cómo quedó el monto. |
+| `src/paginas/Cuentas.tsx` | Cuentas con su saldo: crear, editar, archivar y reactivar. Muestra el mensaje de la API cuando una regla lo impide (archivar con saldo, cambiar el saldo inicial con movimientos, nombre repetido). |
 | `src/paginas/Resumen.tsx` | Indicadores con aviso si el disponible es negativo, periodo, ajustes aparte y totales por categoría. No calcula nada: muestra lo que calcula la API. |
-| `src/util/formato.ts` | Dinero y fechas para mostrar. Trabaja con el texto de la API, sin convertirlo a número. |
+| `src/util/formato.ts` | Dinero y fechas para mostrar, y el dinero que escribe el usuario ("150000,50" → "150000.50"). Trabaja con texto, sin convertirlo a número. |
 | `src/estilos.css` | Estilos; colores y medidas en variables al inicio. |
 
 ## Reglas de la interfaz
 
 - **No repite reglas de negocio**: las decide la API y la interfaz muestra su mensaje. Solo ayuda
   con lo evidente (campos obligatorios, mínimo 8 caracteres en la contraseña).
-- **El dinero nunca se convierte a número** para mostrarlo ni enviarlo: viaja como texto.
+- **El dinero nunca se convierte a número** para mostrarlo ni enviarlo: viaja como texto. El
+  usuario lo escribe sin puntos de miles y con coma para los centavos ("150000,50").
 - **El `id_usuario` nunca se envía**: la API lo toma de la sesión (RN-05).

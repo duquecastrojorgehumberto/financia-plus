@@ -2,12 +2,14 @@
 //
 //   /iniciar-sesion   y   /registro       sin sesión
 //   /                  Resumen             con sesión (RutaProtegida), dentro de la Plantilla
+//   /cuentas           Cuentas             con sesión
 //
-// Las pantallas de cuentas, categorías, movimientos, transferencias, ajustes y
+// Las pantallas de categorías, movimientos, transferencias, ajustes y
 // bolsillos se agregarán aquí, también dentro de RutaProtegida y Plantilla.
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 
 import { Plantilla } from "./componentes/Plantilla";
+import { Cuentas } from "./paginas/Cuentas";
 import { RutaProtegida } from "./componentes/RutaProtegida";
 import { IniciarSesion } from "./paginas/IniciarSesion";
 import { Registro } from "./paginas/Registro";
@@ -24,6 +26,7 @@ export function App() {
           <Route element={<RutaProtegida />}>
             <Route element={<Plantilla />}>
               <Route path="/" element={<Resumen />} />
+              <Route path="/cuentas" element={<Cuentas />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -86,7 +86,8 @@ label {
   color: var(--color-suave);
 }
 
-input {
+input,
+select {
   font: inherit;
   padding: 0.55rem 0.7rem;
   border: 1px solid var(--color-borde);
@@ -96,6 +97,7 @@ input {
 }
 
 input:focus,
+select:focus,
 button:focus-visible,
 a:focus-visible {
   outline: 2px solid var(--color-principal);
@@ -296,6 +298,96 @@ a:focus-visible {
 
 .fila-sub td:first-child {
   padding-left: 1.25rem;
+}
+
+/* ---------- Listas con acciones (cuentas y siguientes pantallas) ---------- */
+
+.titulo-con-acciones {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.titulo-con-acciones h1 {
+  margin: 0;
+}
+
+.casilla {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.formulario-ancho {
+  margin-bottom: 1rem;
+}
+
+.formulario-ancho h2 {
+  margin-top: 0;
+}
+
+.campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.acciones {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.lista-tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.cuenta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cuenta-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.cuenta-cabecera h3 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.cuenta .acciones {
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+.cuenta.archivada {
+  opacity: 0.7;
+  border-style: dashed;
+}
+
+.etiqueta {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: var(--color-fondo);
+  color: var(--color-suave);
+  white-space: nowrap;
+}
+
+.cifra-valor.negativo {
+  color: var(--color-negativo);
 }
 
 @media (max-width: 600px) {

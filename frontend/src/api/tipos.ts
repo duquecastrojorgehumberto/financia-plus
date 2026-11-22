@@ -55,3 +55,25 @@ export interface RespuestaResumen {
   indicadores: Indicadores;
   periodo: ResumenPeriodo;
 }
+
+/** Valores permitidos por la base (ck_cuenta_tipo, D-16). */
+export type TipoCuenta = "EFECTIVO" | "AHORROS" | "CORRIENTE" | "BILLETERA_DIGITAL" | "OTRA";
+
+/** Una cuenta con su saldo ya calculado por la API (RN-11). */
+export interface Cuenta {
+  id_cuenta: number;
+  nombre: string;
+  tipo: TipoCuenta;
+  saldo_inicial: Dinero;
+  saldo: Dinero;
+  saldo_negativo: boolean;   // RN-14: se avisa, no se bloquea
+  activa: boolean;           // false = archivada (RN-12)
+  creado_en: string;
+}
+
+/** Lo que se envía para crear o editar una cuenta. */
+export interface DatosCuenta {
+  nombre: string;
+  tipo: TipoCuenta;
+  saldo_inicial: Dinero;
+}

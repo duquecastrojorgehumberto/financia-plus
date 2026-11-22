@@ -16,7 +16,7 @@ para la sustentación. Lo único que falta es la interfaz React, que se hace en 
 | --- | --- |
 | **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); ingresos, egresos e historial (Tarea 10); transferencias con cargos (Tarea 11); ajustes de saldo (Tarea 12); bolsillos (Tarea 13); resumen (Tarea 14); datos de prueba (Tarea 15); 522 pruebas. |
 | **Documentado** | Requisitos (17 RF, 10 RNF, 15 criterios), arquitectura, modelo de datos (6 tablas), reglas de negocio, 21 decisiones (todas confirmadas), auditoría del diseño anterior, categorías por defecto, guía de continuidad, instalación y uso diario en `README.md`. |
-| **Pendiente** | Ninguna tarea de la guía. Interfaz: faltan las pantallas de cuentas, categorías, movimientos, transferencias, ajustes y bolsillos. | La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
+| **Pendiente** | Ninguna tarea de la guía. Interfaz: faltan las pantallas de categorías, movimientos, transferencias, ajustes y bolsillos. | La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
 
 ## 3. Detalle de lo hecho
 
@@ -405,14 +405,40 @@ Verificado en el navegador, contra la API real y la base `financia` con los dato
 - Vista de celular (375 px) sin desbordamiento; con Carla se ve el aviso de CA-10 (−50.000).
 - `npm run build` sin errores de tipos; la consola solo muestra los 401/400 esperados.
 
+### 3.15 Interfaz React, paso 2: cuentas
+
+| Pieza | Qué hace |
+| --- | --- |
+| `frontend/src/paginas/Cuentas.tsx` | Lista de cuentas con saldo, crear, editar, archivar y reactivar; casilla para ver también las archivadas. |
+| `frontend/src/api/cuentas.ts` | Una función por ruta de `/api/cuentas`. |
+| `frontend/src/componentes/CampoDinero.tsx` | Campo de dinero reutilizable: texto (no número), muestra cómo quedó el monto ("$ 1.500.000,50"). |
+| `frontend/src/util/formato.ts` | Nuevas: `dineroParaEnviar` ("150000,50" → "150000.50"), `dineroParaCampo` y `esDineroValido`. 29 pruebas con Vitest. |
+| `frontend/vite.config.ts` | El destino del proxy se puede cambiar con `FINANCIA_API` (por defecto, el puerto 5000). |
+
+Cómo se escribe el dinero: solo números, centavos con coma o punto, **sin puntos de miles**
+("1.000" sería ambiguo). Si no cumple, el formulario lo dice antes de enviar; las demás reglas
+(máximo, RN-13) las revisa la API.
+
+Verificado en el navegador con Ana, contra una API conectada a `financia_pruebas` (con los datos
+de demostración, que después se borraron: la base de pruebas quedó vacía; `financia` no se tocó):
+- Las 4 cuentas activas suman 1.032.700, igual que el resumen.
+- Archivar Nequi (saldo 229.200): rechazado con el mensaje de la API (RN-12, CA-15).
+- Crear "Daviplata" con saldo "1500000,5": se ve $ 1.500.000,50. Con "1.500.000": el formulario pide
+  escribirlo sin puntos.
+- Cambiar el saldo inicial de Nequi (tiene movimientos): rechazado por RN-13. Renombrarla a
+  "Bancolombia": "Ya tiene una cuenta activa con ese nombre."; a "Nequi personal": guardado.
+- Daviplata: saldo inicial a 0, archivar, verla con "Mostrar archivadas" y reactivarla. Reactivar la
+  otra Daviplata archivada de los datos de demostración: rechazado (nombre repetido entre activas).
+- Con un egreso de 25.000 en Daviplata: saldo −$ 25.000 en rojo y aviso de RN-14.
+- Vista de celular (375 px) sin desbordamiento.
+
 ## 4. Lo que NO existe todavía
 
-- Las demás pantallas de la interfaz: cuentas, categorías, movimientos, transferencias, ajustes
-  y bolsillos. La API ya ofrece todo lo que necesitan (sección de rutas en `README.md`).
+- Las demás pantallas de la interfaz: categorías, movimientos, transferencias, ajustes y
+  bolsillos. La API ya ofrece todo lo que necesitan (sección de rutas en `README.md`).
 - Lo aplazado por decisión del proyecto (`REQUISITOS.md`, sección 3): facturas, Gmail,
   presupuestos, recurrentes, tarjetas, renta, notificaciones, auditoría, varias categorías.
 - El repositorio Git no tiene remoto (no se ha subido a GitHub).
-- No hay datos de prueba (`db/semillas/datos_prueba.sql`).
 - No hay interfaz (`frontend/`).
 - El repositorio Git no tiene remoto (no se ha subido a GitHub).
 - Los scripts SQL de la "Fase 1" anterior (26 tablas) **no forman parte de este proyecto**.
@@ -536,3 +562,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Tarea 15: datos de prueba (`db/semillas/datos_prueba.sql`, `scripts/cargar_datos_prueba.py`, `tests/test_datos_prueba.py`), matriz de criterios en `tests/LEEME.md` y rutas en `README.md`. **Versión 1 de la API completa: 522 pruebas pasan.** |
 | 2026-11-22 | Confirmadas P-45 a P-48 (datos de prueba). No quedan decisiones abiertas. |
 | 2026-11-22 | Interfaz React, paso 1 (`frontend/`): Vite + React + TypeScript, cliente de la API, sesión (registro, inicio y cierre) y pantalla de resumen. Probada en el navegador contra la API real. |
+| 2026-11-22 | Interfaz React, paso 2: pantalla de cuentas (crear, editar, archivar, reactivar) y campo de dinero reutilizable. Probada en el navegador contra la base de pruebas. |
