@@ -365,7 +365,7 @@ Verificado:
   rechazado (CA-15). Después se borraron esos datos con `financia_admin`.
 - **No se cargaron datos en la base `financia`**: eso lo decide el estudiante (comando en `README.md`).
 
-Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
+Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026** (sección 6, P-45 a P-48):
 - **Contraseña de demostración fija** (`demo-financia-2026`), escrita en el README y en el
   encabezado del archivo, con su hash en el SQL. Es ficticia y solo para la base local; permite
   iniciar sesión en la sustentación.
@@ -410,11 +410,11 @@ Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
 | 14 | Resumen financiero e indicadores | **Hecho: 23 pruebas; servidor probado** | RF-13, RF-15 |
 | 15 | Datos de prueba y pruebas de CA-01 a CA-15 | **Hecho: 16 pruebas; cargador y servidor probados** | `REQUISITOS.md`, sección 4 |
 
-**Siguiente paso recomendado:** confirmar las cuatro decisiones de la sección 3.13. Después: cargar los datos de demostración en `financia` para la sustentación y, si se quiere, subir el repositorio a GitHub. La versión 1 de la API está completa.
+**Siguiente paso recomendado:** cargar los datos de demostración en `financia` para la sustentación y, si se quiere, subir el repositorio a GitHub. La versión 1 de la API está completa.
 
 ## 6. Decisiones confirmadas por el estudiante (17 y 22 de noviembre de 2026)
 
-Ya no hay decisiones abiertas.
+Ya no hay decisiones abiertas: todas (P-1 a P-48) están confirmadas.
 
 | # | Pregunta | Respuesta | Dónde quedó |
 | --- | --- | --- | --- |
@@ -462,6 +462,10 @@ Ya no hay decisiones abiertas.
 | P-42 | ¿Los indicadores dependen del periodo? (22/11) | No: son del momento actual. | `ResumenServicio.indicadores` |
 | P-43 | ¿Qué categorías aparecen en el resumen? (22/11) | Solo las que tienen movimientos en el periodo, de mayor a menor, con su parte "directo" separada de sus subcategorías. | `ResumenServicio` |
 | P-44 | ¿El balance incluye los ajustes? (22/11) | No: ingresos − egresos; los ajustes van aparte (RN-53). | `ResumenPeriodo.balance` |
+| P-45 | ¿Contraseña de los usuarios de demostración? (22/11) | Fija y ficticia (`demo-financia-2026`), solo para la base local. | `db/semillas/datos_prueba.sql` |
+| P-46 | ¿Cuántos usuarios de demostración? (22/11) | Tres: Ana (casi todos los criterios), Beto (CA-06) y Carla (CA-09, CA-10). | `db/semillas/datos_prueba.sql` |
+| P-47 | ¿Qué guarda el archivo de datos de prueba? (22/11) | El estado final de cada escenario; los rechazos se prueban con la API sobre esos datos. | `db/semillas/datos_prueba.sql` |
+| P-48 | ¿La lista de categorías por defecto en dos lugares? (22/11) | Sí (Python y SQL), con una prueba que avisa si dejan de coincidir. | `tests/test_datos_prueba.py` |
 
 D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 4 con dos roles:
 `financia_admin` (migraciones) y `financia_app` (aplicación).
@@ -503,3 +507,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Tarea 14: resumen financiero e indicadores (`ResumenRepositorio`, `ResumenServicio`, `GET /api/resumen`); `tests/test_resumen.py` con CA-10 y CA-12 y pruebas de mutación. Servidor probado. **506 pruebas pasan.** |
 | 2026-11-22 | Confirmadas P-40 a P-44 (resumen: una ruta, mes actual por defecto, indicadores del momento, solo categorías con movimientos, balance sin ajustes). |
 | 2026-11-22 | Tarea 15: datos de prueba (`db/semillas/datos_prueba.sql`, `scripts/cargar_datos_prueba.py`, `tests/test_datos_prueba.py`), matriz de criterios en `tests/LEEME.md` y rutas en `README.md`. **Versión 1 de la API completa: 522 pruebas pasan.** |
+| 2026-11-22 | Confirmadas P-45 a P-48 (datos de prueba). No quedan decisiones abiertas. |
