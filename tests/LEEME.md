@@ -12,6 +12,7 @@ Pruebas con `pytest` contra una base PostgreSQL de pruebas (`DATABASE_URL_PRUEBA
 | `test_api_base.py` | `/api/salud`, protección CSRF y errores en JSON (Tarea 6) | Pasa |
 | `test_autenticacion.py` | Registro, inicio y cierre de sesión (Tarea 7) | Pasa |
 | `test_cuentas.py` | Saldo calculado, crear, editar, archivar con saldo 0 y bloqueo de la fila (Tarea 8) | Pasa |
+| `test_categorias.py` | Raíces y subcategorías, dos niveles, solo cambia el nombre, desactivar con subcategorías, CA-14 (Tarea 9) | Pasa |
 | `test_movimientos.py`, `test_transferencias.py`, `test_bolsillos.py`, `test_resumen.py` | Servicios y criterios CA-01 a CA-15 | Pendiente |
 
 ## Cómo ejecutarlas

@@ -42,6 +42,24 @@ def dinero(datos: dict, campo: str) -> Decimal:
     return numero
 
 
+def entero_opcional(datos: dict, campo: str) -> int | None:
+    """Un identificador opcional: un número entero JSON, o null / ausente."""
+    valor = datos.get(campo)
+    if valor is None:
+        return None
+    # bool es un tipo de int en Python (True == 1): se descarta a propósito.
+    if not isinstance(valor, int) or isinstance(valor, bool):
+        raise ErrorNegocio(f"El campo '{campo}' debe ser un número entero.")
+    return valor
+
+
+def solo_campos(datos: dict, *permitidos: str) -> None:
+    """Rechaza campos que la ruta no acepta, en lugar de ignorarlos en silencio."""
+    sobrantes = sorted(set(datos) - set(permitidos))
+    if sobrantes:
+        raise ErrorNegocio(f"Campos no permitidos: {', '.join(sobrantes)}.")
+
+
 def leer_textos(*campos: str) -> dict[str, str]:
     """Devuelve {campo: texto} con los campos pedidos; si falta alguno o no es texto, 400."""
     datos = leer_cuerpo()

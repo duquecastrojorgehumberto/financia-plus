@@ -1,20 +1,20 @@
 # Estado del proyecto — FINANCIA+
 
-Última actualización: 22 de noviembre de 2026 (Tarea 8). **Actualiza este archivo cada vez que termines una tarea.**
+Última actualización: 22 de noviembre de 2026 (Tarea 9). **Actualiza este archivo cada vez que termines una tarea.**
 
 ## 1. Resumen en una frase
 
 La base de datos está creada, migrada (`0001` y `0002`) y probada; la API Flask funciona con
-autenticación y cuentas (saldo calculado; archivar solo con saldo 0) y **239 pruebas pasan**.
-Todavía no hay categorías editables, movimientos, bolsillos, resumen ni interfaz.
+autenticación, cuentas (saldo calculado; archivar solo con saldo 0) y categorías, y **287 pruebas
+pasan**. Todavía no hay movimientos, bolsillos, resumen ni interfaz.
 
 ## 2. Estado por categoría
 
 | Categoría | Qué hay |
 | --- | --- |
-| **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); 239 pruebas. |
+| **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); 287 pruebas. |
 | **Documentado** | Requisitos (17 RF, 10 RNF, 15 criterios), arquitectura, modelo de datos (6 tablas), reglas de negocio, 21 decisiones (todas confirmadas), auditoría del diseño anterior, categorías por defecto, guía de continuidad, instalación y uso diario en `README.md`. |
-| **Pendiente** | Tareas 9 a 15 (sección 5). La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
+| **Pendiente** | Tareas 10 a 15 (sección 5). La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
 
 ## 3. Detalle de lo hecho
 
@@ -132,10 +132,49 @@ Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026*
   que el saldo inicial queda fijo en cuanto la cuenta tiene cualquier movimiento.
 - **El saldo inicial es opcional al crear** (vale 0, como el valor por defecto de la tabla).
 
+### 3.7 Categorías (Tarea 9: RF-03)
+
+| Archivo | Qué hace |
+| --- | --- |
+| `app/entidades/categoria.py` | Nuevos `Categoria.datos_publicos()` y `RamaCategoria` (raíz + subcategorías, por composición). |
+| `app/repositorios/categorias.py` | `obtener`, `obtener_para_actualizar` (`FOR UPDATE`), `renombrar`, `cambiar_activa`, `desactivar_subcategorias`. |
+| `app/servicios/categorias.py` | `CategoriaServicio`: árbol con filtros por tipo y por activas; crear raíz o subcategoría (la subcategoría toma el tipo del padre); máximo dos niveles (RN-21); solo cambia el nombre (RN-22); desactivar (con sus subcategorías) y reactivar. Traduce `uq_categoria_hermanas_activas`. |
+| `app/rutas/categorias.py` | `GET`/`POST /api/categorias`, `GET`/`PUT /api/categorias/<id>`, `POST …/desactivar` y `…/reactivar`. |
+| `app/rutas/entrada.py` | Nuevos `entero_opcional` (rechaza `true`, textos y decimales) y `solo_campos` (rechaza campos no permitidos). |
+
+Orden de los bloqueos: `desactivar` y `reactivar` bloquean siempre primero la categoría padre y
+después la hija, para que dos peticiones simultáneas no puedan esperarse mutuamente (deadlock).
+
+Verificado:
+- `tests/test_categorias.py` (48 casos): RN-20 a RN-25, CA-14 (los movimientos de una categoría
+  desactivada se conservan y siguen contando en el saldo), RN-06, árbol de las categorías por
+  defecto (13 raíces, 21 subcategorías) y API.
+- Servidor real (contra `financia_pruebas`): árbol de egresos (9 raíces, 17 subcategorías);
+  crear raíz y subcategoría; tercer nivel rechazado; cambiar el tipo rechazado; renombrar;
+  desactivar la raíz desactiva su subcategoría; la hija no se reactiva con el padre desactivado;
+  nombre repetido rechazado. Los datos de la verificación se eliminaron después.
+- Las pruebas dejan la base de pruebas vacía.
+
+Pendiente para la Tarea 10: CA-14 también exige que una categoría desactivada **no se pueda usar
+en un movimiento nuevo**. Eso lo debe validar el servicio de movimientos, leyendo la categoría con
+bloqueo (`FOR SHARE` o `FOR UPDATE`) para que no la desactiven entre la revisión y el `INSERT`.
+
+Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
+- **Desactivar una raíz desactiva también sus subcategorías activas**, en la misma transacción.
+  Una subcategoría activa bajo un padre desactivado sería confusa en los totales (RN-27).
+- **Reactivar una raíz no reactiva sus subcategorías**; cada una se reactiva aparte, y una
+  subcategoría solo se reactiva si su padre está activo.
+- **Una categoría desactivada no se renombra** (como las cuentas archivadas, P-11).
+- **Si el cuerpo de `PUT` trae `tipo` o `id_padre`, se responde 400** en lugar de ignorarlos (RN-22).
+- **"Impuestos y comisiones" no tiene protección especial**: se puede renombrar o desactivar como
+  cualquier otra. RN-26 solo exige que el usuario la reciba al registrarse. En la Tarea 11, el
+  formulario de transferencias la propondría para los cargos si existe activa con ese nombre.
+  La alternativa es impedir renombrarla y desactivarla, pero identificarla por el nombre es frágil.
+
 ## 4. Lo que NO existe todavía
 
-- Módulos de categorías (crear, renombrar, desactivar), movimientos, transferencias, ajustes,
-  bolsillos y resumen: sin repositorios, servicios ni rutas completos (Tareas 9 a 14).
+- Módulos de movimientos, transferencias, ajustes, bolsillos y resumen: sin repositorios,
+  servicios ni rutas (Tareas 10 a 14).
 - No hay datos de prueba (`db/semillas/datos_prueba.sql`).
 - No hay interfaz (`frontend/`).
 - El repositorio Git no tiene remoto (no se ha subido a GitHub).
@@ -153,15 +192,15 @@ Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026*
 | 6 | Esqueleto de Flask | **Hecho: `/api/salud` responde; 13 pruebas** | `ARQUITECTURA.md` |
 | 7 | Autenticación y registro | **Hecho: 28 pruebas; servidor probado** | RF-01, RN-26 |
 | 8 | Cuentas (archivar solo con saldo 0) | **Hecho: 50 pruebas; servidor probado** | RF-02, RF-11, RN-12, CA-15 |
-| 9 | Categorías | Pendiente (**esperando aprobación**) | RF-03 |
-| 10 | Ingresos, egresos, historial, anular y corregir | Pendiente | RF-04, RF-05, RF-14, RF-16 |
+| 9 | Categorías | **Hecho: 48 pruebas; servidor probado** | RF-03 |
+| 10 | Ingresos, egresos, historial, anular y corregir | Pendiente (**esperando aprobación**) | RF-04, RF-05, RF-14, RF-16 |
 | 11 | Transferencias con cargos | Pendiente | RF-06, RF-07 |
 | 12 | Ajustes de saldo | Pendiente | RF-17 |
 | 13 | Bolsillos, metas e historial | Pendiente | RF-08 a RF-10, RF-12 |
 | 14 | Resumen financiero e indicadores | Pendiente | RF-13, RF-15 |
 | 15 | Datos de prueba y pruebas de CA-01 a CA-15 | Pendiente | `REQUISITOS.md`, sección 4 |
 
-**Siguiente paso recomendado:** Tarea 9 (categorías), cuando el estudiante la apruebe.
+**Siguiente paso recomendado:** confirmar las cinco decisiones de la sección 3.7 y luego la Tarea 10 (ingresos, egresos e historial).
 
 ## 6. Decisiones confirmadas por el estudiante (17 y 22 de noviembre de 2026)
 
@@ -211,3 +250,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Confirmadas P-8 a P-10 (contraseña de 8 caracteres o más, el registro inicia sesión, `@requiere_sesion` solo revisa la cookie). |
 | 2026-11-22 | Tarea 8: cuentas (entidad `Cuenta`/`CuentaConSaldo`, `CuentaRepositorio` con el saldo calculado, `CuentaServicio`, rutas `/api/cuentas`); `tests/test_cuentas.py` con prueba real del bloqueo `FOR UPDATE`. Servidor probado. **239 pruebas pasan.** |
 | 2026-11-22 | Confirmadas P-11 a P-14 (cuenta archivada no se edita, reactivar, anulados fijan el saldo inicial, saldo inicial opcional). |
+| 2026-11-22 | Tarea 9: categorías (`RamaCategoria`, `CategoriaRepositorio` ampliado, `CategoriaServicio`, rutas `/api/categorias`); `tests/test_categorias.py`. Servidor probado. **287 pruebas pasan.** |
