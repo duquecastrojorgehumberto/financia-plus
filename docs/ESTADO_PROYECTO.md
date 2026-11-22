@@ -159,7 +159,7 @@ Pendiente para la Tarea 10: CA-14 también exige que una categoría desactivada 
 en un movimiento nuevo**. Eso lo debe validar el servicio de movimientos, leyendo la categoría con
 bloqueo (`FOR SHARE` o `FOR UPDATE`) para que no la desactiven entre la revisión y el `INSERT`.
 
-Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
+Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026** (sección 6, P-15 a P-19):
 - **Desactivar una raíz desactiva también sus subcategorías activas**, en la misma transacción.
   Una subcategoría activa bajo un padre desactivado sería confusa en los totales (RN-27).
 - **Reactivar una raíz no reactiva sus subcategorías**; cada una se reactiva aparte, y una
@@ -200,7 +200,7 @@ Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
 | 14 | Resumen financiero e indicadores | Pendiente | RF-13, RF-15 |
 | 15 | Datos de prueba y pruebas de CA-01 a CA-15 | Pendiente | `REQUISITOS.md`, sección 4 |
 
-**Siguiente paso recomendado:** confirmar las cinco decisiones de la sección 3.7 y luego la Tarea 10 (ingresos, egresos e historial).
+**Siguiente paso recomendado:** Tarea 10 (ingresos, egresos e historial), cuando el estudiante la apruebe.
 
 ## 6. Decisiones confirmadas por el estudiante (17 y 22 de noviembre de 2026)
 
@@ -222,6 +222,11 @@ Ya no hay decisiones abiertas.
 | P-12 | ¿Existe la acción "reactivar cuenta"? (22/11) | Sí. Si otra cuenta activa tiene el mismo nombre, se rechaza y se pide renombrar esa otra. | `CuentaServicio.reactivar` |
 | P-13 | ¿Los movimientos anulados fijan el saldo inicial (RN-13)? (22/11) | Sí: cualquier movimiento, vigente o anulado. | `CuentaRepositorio.tiene_movimientos` |
 | P-14 | ¿El saldo inicial es obligatorio al crear? (22/11) | No: si no se envía, vale 0. | `POST /api/cuentas` |
+| P-15 | ¿Desactivar una raíz desactiva sus subcategorías? (22/11) | Sí, en la misma transacción. | `CategoriaServicio.desactivar` |
+| P-16 | ¿Reactivar una raíz reactiva sus subcategorías? (22/11) | No: cada una aparte, y solo con el padre activo. | `CategoriaServicio.reactivar` |
+| P-17 | ¿Se renombra una categoría desactivada? (22/11) | No: primero se reactiva. | `CategoriaServicio.renombrar` |
+| P-18 | ¿Qué pasa si al renombrar llegan `tipo` o `id_padre`? (22/11) | Se responde 400; no se ignoran. | `PUT /api/categorias/<id>` |
+| P-19 | ¿"Impuestos y comisiones" tiene protección especial? (22/11) | No: se renombra o desactiva como cualquier otra. | RN-26 |
 
 D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 4 con dos roles:
 `financia_admin` (migraciones) y `financia_app` (aplicación).
@@ -251,3 +256,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Tarea 8: cuentas (entidad `Cuenta`/`CuentaConSaldo`, `CuentaRepositorio` con el saldo calculado, `CuentaServicio`, rutas `/api/cuentas`); `tests/test_cuentas.py` con prueba real del bloqueo `FOR UPDATE`. Servidor probado. **239 pruebas pasan.** |
 | 2026-11-22 | Confirmadas P-11 a P-14 (cuenta archivada no se edita, reactivar, anulados fijan el saldo inicial, saldo inicial opcional). |
 | 2026-11-22 | Tarea 9: categorías (`RamaCategoria`, `CategoriaRepositorio` ampliado, `CategoriaServicio`, rutas `/api/categorias`); `tests/test_categorias.py`. Servidor probado. **287 pruebas pasan.** |
+| 2026-11-22 | Confirmadas P-15 a P-19 (categorías: desactivar con subcategorías, reactivar una a una, desactivada no se renombra, 400 si llegan tipo o padre, sin protección especial para "Impuestos y comisiones"). |
