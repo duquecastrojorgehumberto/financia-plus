@@ -9,6 +9,8 @@ Una clase por módulo. Aquí viven las reglas de `docs/REGLAS_NEGOCIO.md` marcad
 | `autenticacion.py` | `AutenticacionServicio`: `registrar` (usuario + categorías en una transacción), `iniciar_sesion`, `obtener_usuario_activo` | Hecho (Tarea 7) |
 | `categorias_por_defecto.py` | La lista de categorías que recibe cada usuario nuevo (RN-26) | Hecho (Tarea 7) |
 | `categorias.py` | `CategoriaServicio`: `listar_arbol` (con filtros), `obtener`, `crear` (raíz o subcategoría, máximo dos niveles), `renombrar` (solo el nombre, RN-22), `desactivar` (con sus subcategorías), `reactivar` | Hecho (Tarea 9) |
+| `movimientos.py` | `MovimientoServicio`: `historial` (filtros), `obtener`, `registrar` (ingreso o egreso), `corregir` (RN-72), `anular`, `reactivar`. `DatosMovimiento` y `FiltroHistorial` agrupan los datos de entrada | Hecho (Tarea 10) |
+| `validaciones.py` | `validar_dinero`: monto o saldo con máximo 2 decimales y dentro de `numeric(14,2)` | Hecho (Tarea 10) |
 | `cuentas.py` | `CuentaServicio`: `listar`, `obtener`, `crear`, `editar` (RN-13), `archivar` (solo con saldo 0, bloqueando la fila), `reactivar` | Hecho (Tarea 8) |
 
 Operaciones que exigen transacción explícita:

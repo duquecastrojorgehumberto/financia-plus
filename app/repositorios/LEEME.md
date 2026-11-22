@@ -6,8 +6,8 @@ el constructor; cada método ejecuta una consulta SQL escrita a mano y devuelve 
 | Archivo | Clase | Estado |
 | --- | --- | --- |
 | `usuarios.py` | `UsuarioRepositorio`: `insertar`, `obtener`, `obtener_por_correo` | Hecho (Tarea 7) |
-| `categorias.py` | `CategoriaRepositorio`: `listar`, `obtener`, `obtener_para_actualizar` (`FOR UPDATE`), `insertar`, `renombrar`, `cambiar_activa`, `desactivar_subcategorias` | Hecho (Tareas 7 y 9) |
-| `cuentas.py` | `CuentaRepositorio`: la consulta del **saldo calculado**, `obtener_para_actualizar` (`FOR UPDATE`), `tiene_movimientos`, `insertar`, `actualizar`, `cambiar_activa` | Hecho (Tarea 8) |
+| `categorias.py` | `CategoriaRepositorio`: `listar`, `obtener`, `obtener_para_actualizar` (`FOR UPDATE`), `obtener_para_usar` (`FOR SHARE`), `insertar`, `renombrar`, `cambiar_activa`, `desactivar_subcategorias` | Hecho (Tareas 7 y 9) |
+| `cuentas.py` | `CuentaRepositorio`: la consulta del **saldo calculado**, `obtener_para_actualizar` (`FOR UPDATE`), `obtener_para_usar` (`FOR SHARE`), `tiene_movimientos`, `insertar`, `actualizar`, `cambiar_activa` | Hecho (Tarea 8) |
 
 Reglas:
 - Todo método recibe `id_usuario` y lo usa en el `WHERE`. Única excepción:
@@ -15,3 +15,12 @@ Reglas:
 - Siempre parámetros (`%s`). Nunca f-strings ni concatenación para armar SQL.
 - No hacen COMMIT ni ROLLBACK: eso lo decide el servicio.
 - Dinero como `Decimal`.
+
+| Archivo (Tarea 10) | Clase | Estado |
+| --- | --- | --- |
+| `movimientos.py` | `MovimientoRepositorio`: `listar` (historial con filtros opcionales en una sola consulta), `obtener_detalle`, `obtener_para_actualizar`, `insertar_ingreso_o_egreso`, `corregir`, `cambiar_estado` | Hecho (Tarea 10) |
+
+Bloqueos que usan los repositorios:
+- `FOR UPDATE` (exclusivo): la fila que se va a cambiar. Nadie más la cambia ni la usa hasta el COMMIT.
+- `FOR SHARE` (compartido): la cuenta o categoría que un movimiento va a usar. Varias transacciones
+  pueden tenerlo a la vez, pero archivar la cuenta o desactivar la categoría tiene que esperar.

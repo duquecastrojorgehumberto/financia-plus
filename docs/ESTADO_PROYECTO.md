@@ -1,20 +1,21 @@
 # Estado del proyecto — FINANCIA+
 
-Última actualización: 22 de noviembre de 2026 (Tarea 9). **Actualiza este archivo cada vez que termines una tarea.**
+Última actualización: 22 de noviembre de 2026 (Tarea 10). **Actualiza este archivo cada vez que termines una tarea.**
 
 ## 1. Resumen en una frase
 
 La base de datos está creada, migrada (`0001` y `0002`) y probada; la API Flask funciona con
-autenticación, cuentas (saldo calculado; archivar solo con saldo 0) y categorías, y **287 pruebas
-pasan**. Todavía no hay movimientos, bolsillos, resumen ni interfaz.
+autenticación, cuentas (saldo calculado; archivar solo con saldo 0), categorías, ingresos, egresos
+e historial, y **360 pruebas pasan**. Todavía no hay transferencias, ajustes, bolsillos, resumen ni
+interfaz.
 
 ## 2. Estado por categoría
 
 | Categoría | Qué hay |
 | --- | --- |
-| **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); 287 pruebas. |
+| **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); ingresos, egresos e historial (Tarea 10); 360 pruebas. |
 | **Documentado** | Requisitos (17 RF, 10 RNF, 15 criterios), arquitectura, modelo de datos (6 tablas), reglas de negocio, 21 decisiones (todas confirmadas), auditoría del diseño anterior, categorías por defecto, guía de continuidad, instalación y uso diario en `README.md`. |
-| **Pendiente** | Tareas 10 a 15 (sección 5). La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
+| **Pendiente** | Tareas 11 a 15 (sección 5). La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
 
 ## 3. Detalle de lo hecho
 
@@ -171,10 +172,54 @@ Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026*
   formulario de transferencias la propondría para los cargos si existe activa con ese nombre.
   La alternativa es impedir renombrarla y desactivarla, pero identificarla por el nombre es frágil.
 
+### 3.8 Ingresos, egresos e historial (Tarea 10: RF-04, RF-05, RF-14, RF-16)
+
+| Archivo | Qué hace |
+| --- | --- |
+| `app/entidades/movimiento.py` | `Movimiento` (una clase para los cinco tipos, sin herencia, D-03), `TipoMovimiento`, `EstadoMovimiento`, `MovimientoDetalle` (movimiento + nombres, por composición). |
+| `app/repositorios/movimientos.py` | Historial en **una sola consulta** con filtros opcionales `(%(filtro)s IS NULL OR condición)`; insertar, corregir (marca `actualizado_en`, RN-73) y cambiar estado. |
+| `app/repositorios/cuentas.py`, `categorias.py` | Nuevo `obtener_para_usar` con `FOR SHARE`. |
+| `app/servicios/movimientos.py` | `MovimientoServicio`: registrar ingreso o egreso; corregir (RN-72); anular (RN-70) y reactivar (RN-71); historial. Valida cuenta activa (RN-12), categoría activa y del mismo tipo (RN-25, RN-31) y propiedad (RN-06). |
+| `app/servicios/validaciones.py` | `validar_dinero`, compartida con `CuentaServicio`. |
+| `app/rutas/movimientos.py` | `GET`/`POST /api/movimientos`, `GET`/`PUT /api/movimientos/<id>`, `POST …/anular` y `…/reactivar`. |
+| `app/rutas/entrada.py` | Nuevos `entero`, `texto_opcional`, `fecha` y los parámetros de URL `parametro_fecha`, `parametro_entero`, `parametro_texto`. |
+
+Verificado:
+- `tests/test_movimientos.py` (73 casos): CA-01, CA-05, CA-06, CA-13, **CA-14 completo** (la
+  categoría desactivada ya no se puede usar en un movimiento nuevo), RN-12, RN-30, RN-31, RN-70
+  a RN-73, cada filtro del historial, RN-06 y API.
+- **Carreras reales entre dos conexiones:** si la cuenta se archiva (o la categoría se desactiva)
+  mientras se registra un movimiento, el registro espera y lo rechaza. **Prueba de mutación:** al
+  quitar el `FOR SHARE`, las dos pruebas fallan (se guardaba un movimiento en una cuenta
+  archivada); con él, pasan. La misma comprobación se hizo con la prueba del `FOR UPDATE` de la
+  Tarea 8: también falla sin él.
+- Una primera versión de esas pruebas pasaba también sin `FOR SHARE` (el `INSERT` ya bloquea la
+  cuenta al revisar la FK), así que no demostraba nada; se reescribió para reproducir la carrera
+  en el momento que el `FOR SHARE` protege: entre la revisión y el `INSERT`.
+- Servidor real (contra `financia_pruebas`): CA-01 (130.000), CA-05, CA-13 (anulado, saldo vuelve),
+  CA-14, filtro por categoría con subcategorías y corrección. Datos de la verificación eliminados.
+- Las pruebas dejan la base de pruebas vacía.
+
+Qué queda para otras tareas (el servicio lo rechaza con un mensaje claro):
+- **Tarea 11:** anular y reactivar una transferencia (debe hacerse en cascada con sus cargos,
+  RN-38) y corregir transferencias y cargos. Un cargo ya se puede anular solo, y solo se
+  reactiva si su transferencia está vigente.
+- **Tarea 12:** registrar y corregir ajustes. Anularlos y reactivarlos ya funciona (RN-54).
+
+Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
+- **Una sola ruta para ingresos y egresos** (`POST /api/movimientos` con `tipo`), en lugar de dos.
+- **El filtro por categoría incluye sus subcategorías**, y **el filtro por cuenta incluye las
+  transferencias que entran** a ella. El historial muestra los anulados salvo que se filtre por estado.
+- **Al corregir, se puede conservar una categoría que se desactivó después**; solo se exige que
+  esté activa si se cambia por otra. **Reactivar** un movimiento tampoco exige que su categoría
+  siga activa (no es un movimiento nuevo).
+- **Se aceptan fechas futuras** (por ejemplo, un pago programado). Los documentos no lo limitan.
+- **El historial no tiene paginación**: devuelve todos los movimientos que cumplen los filtros.
+
 ## 4. Lo que NO existe todavía
 
-- Módulos de movimientos, transferencias, ajustes, bolsillos y resumen: sin repositorios,
-  servicios ni rutas (Tareas 10 a 14).
+- Módulos de transferencias, ajustes, bolsillos y resumen: sin repositorios, servicios ni rutas
+  (Tareas 11 a 14).
 - No hay datos de prueba (`db/semillas/datos_prueba.sql`).
 - No hay interfaz (`frontend/`).
 - El repositorio Git no tiene remoto (no se ha subido a GitHub).
@@ -193,14 +238,14 @@ Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026*
 | 7 | Autenticación y registro | **Hecho: 28 pruebas; servidor probado** | RF-01, RN-26 |
 | 8 | Cuentas (archivar solo con saldo 0) | **Hecho: 50 pruebas; servidor probado** | RF-02, RF-11, RN-12, CA-15 |
 | 9 | Categorías | **Hecho: 48 pruebas; servidor probado** | RF-03 |
-| 10 | Ingresos, egresos, historial, anular y corregir | Pendiente (**esperando aprobación**) | RF-04, RF-05, RF-14, RF-16 |
-| 11 | Transferencias con cargos | Pendiente | RF-06, RF-07 |
+| 10 | Ingresos, egresos, historial, anular y corregir | **Hecho: 73 pruebas; servidor probado** | RF-04, RF-05, RF-14, RF-16 |
+| 11 | Transferencias con cargos | Pendiente (**esperando aprobación**) | RF-06, RF-07 |
 | 12 | Ajustes de saldo | Pendiente | RF-17 |
 | 13 | Bolsillos, metas e historial | Pendiente | RF-08 a RF-10, RF-12 |
 | 14 | Resumen financiero e indicadores | Pendiente | RF-13, RF-15 |
 | 15 | Datos de prueba y pruebas de CA-01 a CA-15 | Pendiente | `REQUISITOS.md`, sección 4 |
 
-**Siguiente paso recomendado:** Tarea 10 (ingresos, egresos e historial), cuando el estudiante la apruebe.
+**Siguiente paso recomendado:** confirmar las cinco decisiones de la sección 3.8 y luego la Tarea 11 (transferencias con cargos).
 
 ## 6. Decisiones confirmadas por el estudiante (17 y 22 de noviembre de 2026)
 
@@ -257,3 +302,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Confirmadas P-11 a P-14 (cuenta archivada no se edita, reactivar, anulados fijan el saldo inicial, saldo inicial opcional). |
 | 2026-11-22 | Tarea 9: categorías (`RamaCategoria`, `CategoriaRepositorio` ampliado, `CategoriaServicio`, rutas `/api/categorias`); `tests/test_categorias.py`. Servidor probado. **287 pruebas pasan.** |
 | 2026-11-22 | Confirmadas P-15 a P-19 (categorías: desactivar con subcategorías, reactivar una a una, desactivada no se renombra, 400 si llegan tipo o padre, sin protección especial para "Impuestos y comisiones"). |
+| 2026-11-22 | Tarea 10: ingresos, egresos e historial (`Movimiento`, `MovimientoRepositorio`, `MovimientoServicio`, rutas `/api/movimientos`, `FOR SHARE` en cuentas y categorías); `tests/test_movimientos.py` con carreras reales y pruebas de mutación. Servidor probado. **360 pruebas pasan.** |

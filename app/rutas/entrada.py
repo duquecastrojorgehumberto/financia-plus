@@ -1,9 +1,13 @@
-"""Lectura del cuerpo JSON de una petición: comprueba su FORMA, no las reglas de negocio.
+"""Lectura de los datos de una petición: comprueba su FORMA, no las reglas de negocio.
 
-"¿Llegó el campo? ¿Es texto? ¿Es un número de dinero?" se revisa aquí.
+"¿Llegó el campo? ¿Es texto? ¿Es un número de dinero? ¿Es una fecha?" se revisa aquí.
 "¿El saldo puede ser negativo?" o "¿el correo ya existe?" lo decide el servicio.
+
+Hay funciones para el cuerpo JSON (texto, dinero, entero, fecha...) y para los
+parámetros de la URL (?desde=2026-11-01&id_cuenta=3).
 """
 
+from datetime import date
 from decimal import Decimal, InvalidOperation
 
 from flask import request
@@ -51,6 +55,55 @@ def entero_opcional(datos: dict, campo: str) -> int | None:
     if not isinstance(valor, int) or isinstance(valor, bool):
         raise ErrorNegocio(f"El campo '{campo}' debe ser un número entero.")
     return valor
+
+
+def entero(datos: dict, campo: str) -> int:
+    """Un identificador obligatorio."""
+    valor = entero_opcional(datos, campo)
+    if valor is None:
+        raise ErrorNegocio(f"Falta el campo '{campo}'.")
+    return valor
+
+
+def texto_opcional(datos: dict, campo: str) -> str | None:
+    valor = datos.get(campo)
+    if valor is None:
+        return None
+    if not isinstance(valor, str):
+        raise ErrorNegocio(f"El campo '{campo}' debe ser texto.")
+    return valor
+
+
+def _convertir_fecha(valor: str, campo: str) -> date:
+    try:
+        return date.fromisoformat(valor)
+    except ValueError:
+        raise ErrorNegocio(f"El campo '{campo}' debe ser una fecha con el formato AAAA-MM-DD.") from None
+
+
+def fecha(datos: dict, campo: str) -> date:
+    """Una fecha obligatoria, como texto "2026-11-01"."""
+    return _convertir_fecha(texto(datos, campo), campo)
+
+
+def parametro_fecha(nombre: str) -> date | None:
+    """?desde=2026-11-01 en la URL. Ausente o vacío: None."""
+    valor = request.args.get(nombre, "")
+    return _convertir_fecha(valor, nombre) if valor else None
+
+
+def parametro_entero(nombre: str) -> int | None:
+    """?id_cuenta=3 en la URL. Ausente o vacío: None."""
+    valor = request.args.get(nombre, "")
+    if not valor:
+        return None
+    if not valor.isdigit():
+        raise ErrorNegocio(f"El parámetro '{nombre}' debe ser un número entero.")
+    return int(valor)
+
+
+def parametro_texto(nombre: str) -> str | None:
+    return request.args.get(nombre) or None
 
 
 def solo_campos(datos: dict, *permitidos: str) -> None:

@@ -18,6 +18,7 @@ from app.errores import registrar_manejadores
 from app.rutas.autenticacion import autenticacion_bp
 from app.rutas.categorias import categorias_bp
 from app.rutas.cuentas import cuentas_bp
+from app.rutas.movimientos import movimientos_bp
 from app.rutas.salud import salud_bp
 
 
@@ -51,4 +52,5 @@ def create_app(config: Config | None = None, bd: BaseDatos | None = None) -> Fla
     app.register_blueprint(autenticacion_bp)
     app.register_blueprint(cuentas_bp)
     app.register_blueprint(categorias_bp)
+    app.register_blueprint(movimientos_bp)
     return app

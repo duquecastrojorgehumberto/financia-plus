@@ -16,7 +16,6 @@ La prueba del bloqueo necesita datos confirmados en la base; los crea con el
 rol dueño y los borra al terminar.
 """
 
-import os
 import uuid
 from datetime import date
 from decimal import Decimal
@@ -312,31 +311,6 @@ def test_cuenta_ajena_responde_no_encontrado(servicio, con_tx, u, accion):
 # =====================================================================
 # 6. Bloqueo de la fila al archivar (D-20)
 # =====================================================================
-
-@pytest.fixture
-def cuenta_confirmada():
-    """Usuario, categoría y cuenta CONFIRMADOS en la base de pruebas (los ve otra conexión).
-
-    Se crean y se borran con el rol dueño (DATABASE_URL_PRUEBAS), que sí puede borrar.
-    """
-    admin = psycopg.connect(os.environ["DATABASE_URL_PRUEBAS"], autocommit=True)
-    admin.execute("SET lock_timeout = '5s'")   # la limpieza nunca se queda esperando para siempre
-    correo = f"bloqueo.{uuid.uuid4().hex[:10]}@prueba.example"
-    u = admin.execute("INSERT INTO usuario (nombre, correo, clave_hash) VALUES ('Bloqueo', %s, 'h') "
-                      "RETURNING id_usuario", (correo,)).fetchone()[0]
-    cat = admin.execute("INSERT INTO categoria (id_usuario, nombre, tipo) VALUES (%s, 'Salario', 'INGRESO') "
-                        "RETURNING id_categoria", (u,)).fetchone()[0]
-    c = admin.execute("INSERT INTO cuenta (id_usuario, nombre) VALUES (%s, 'Nequi') "
-                      "RETURNING id_cuenta", (u,)).fetchone()[0]
-    try:
-        yield u, cat, c
-    finally:
-        admin.execute("DELETE FROM movimiento WHERE id_usuario = %s", (u,))
-        admin.execute("DELETE FROM cuenta WHERE id_usuario = %s", (u,))
-        admin.execute("DELETE FROM categoria WHERE id_usuario = %s", (u,))
-        admin.execute("DELETE FROM usuario WHERE id_usuario = %s", (u,))
-        admin.close()
-
 
 def test_archivar_bloquea_la_cuenta_hasta_terminar(cuenta_confirmada, con_tx):
     """D-20, RN-12: mientras la transacción de archivar no termina, otra conexión no puede

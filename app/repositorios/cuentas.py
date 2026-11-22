@@ -106,6 +106,26 @@ class CuentaRepositorio:
         ).fetchone()
         return self._a_cuenta(fila) if fila else None
 
+    def obtener_para_usar(self, id_usuario: int, id_cuenta: int) -> Cuenta | None:
+        """Lee la cuenta con un bloqueo COMPARTIDO (FOR SHARE) hasta el final de la transacción.
+
+        Se usa al registrar o cambiar un movimiento: varias transacciones pueden
+        tener a la vez este bloqueo (no se estorban entre sí), pero archivar la
+        cuenta (FOR UPDATE) tiene que esperar a que terminen, y viceversa. Así la
+        cuenta no se archiva entre "revisé que está activa" y el INSERT.
+        """
+        fila = self.con.execute(
+            """
+            SELECT id_cuenta, id_usuario, nombre, tipo, saldo_inicial, activa, creado_en
+              FROM cuenta
+             WHERE id_usuario = %s
+               AND id_cuenta = %s
+               FOR SHARE
+            """,
+            (id_usuario, id_cuenta),
+        ).fetchone()
+        return self._a_cuenta(fila) if fila else None
+
     def tiene_movimientos(self, id_usuario: int, id_cuenta: int) -> bool:
         """True si la cuenta aparece en algún movimiento, como origen o destino, VIGENTE o ANULADO."""
         fila = self.con.execute(

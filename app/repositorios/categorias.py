@@ -62,6 +62,24 @@ class CategoriaRepositorio:
         ).fetchone()
         return self._a_entidad(fila) if fila else None
 
+    def obtener_para_usar(self, id_usuario: int, id_categoria: int) -> Categoria | None:
+        """Lee la categoría con un bloqueo COMPARTIDO (FOR SHARE) hasta el final de la transacción.
+
+        Mientras se registra un movimiento con ella, nadie puede desactivarla
+        (desactivar usa FOR UPDATE y tiene que esperar). Ver CuentaRepositorio.obtener_para_usar.
+        """
+        fila = self.con.execute(
+            """
+            SELECT id_categoria, id_usuario, id_padre, nombre, tipo, activa, creado_en
+              FROM categoria
+             WHERE id_usuario = %s
+               AND id_categoria = %s
+               FOR SHARE
+            """,
+            (id_usuario, id_categoria),
+        ).fetchone()
+        return self._a_entidad(fila) if fila else None
+
     # ------------------------------------------------------------------
     # Escritura
     # ------------------------------------------------------------------

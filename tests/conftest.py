@@ -14,6 +14,7 @@ se deshace con ROLLBACK. Ninguna prueba deja datos en la base.
 
 import os
 import pathlib
+import uuid
 
 import psycopg
 import pytest
@@ -116,3 +117,33 @@ def cliente_api(con_tx):
     app = create_app(config, bd=BaseDatosDePrueba(con_tx))
     app.config["TESTING"] = True
     return app.test_client()
+
+
+# ---------------------------------------------------------------------
+# Para probar bloqueos entre DOS conexiones: los datos deben estar confirmados
+# (una transacción abierta no deja ver sus filas a otra conexión).
+# ---------------------------------------------------------------------
+
+@pytest.fixture
+def cuenta_confirmada():
+    """Usuario, categoría y cuenta CONFIRMADOS en la base de pruebas (los ve otra conexión).
+
+    Se crean y se borran con el rol dueño (DATABASE_URL_PRUEBAS), que sí puede borrar.
+    """
+    admin = psycopg.connect(os.environ["DATABASE_URL_PRUEBAS"], autocommit=True)
+    admin.execute("SET lock_timeout = '5s'")   # la limpieza nunca se queda esperando para siempre
+    correo = f"bloqueo.{uuid.uuid4().hex[:10]}@prueba.example"
+    u = admin.execute("INSERT INTO usuario (nombre, correo, clave_hash) VALUES ('Bloqueo', %s, 'h') "
+                      "RETURNING id_usuario", (correo,)).fetchone()[0]
+    cat = admin.execute("INSERT INTO categoria (id_usuario, nombre, tipo) VALUES (%s, 'Salario', 'INGRESO') "
+                        "RETURNING id_categoria", (u,)).fetchone()[0]
+    c = admin.execute("INSERT INTO cuenta (id_usuario, nombre) VALUES (%s, 'Nequi') "
+                      "RETURNING id_cuenta", (u,)).fetchone()[0]
+    try:
+        yield u, cat, c
+    finally:
+        admin.execute("DELETE FROM movimiento WHERE id_usuario = %s", (u,))
+        admin.execute("DELETE FROM cuenta WHERE id_usuario = %s", (u,))
+        admin.execute("DELETE FROM categoria WHERE id_usuario = %s", (u,))
+        admin.execute("DELETE FROM usuario WHERE id_usuario = %s", (u,))
+        admin.close()

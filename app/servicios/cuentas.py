@@ -22,8 +22,8 @@ from psycopg import errors
 from app.entidades.cuenta import Cuenta, CuentaConSaldo, TipoCuenta
 from app.errores import ErrorNegocio, NoEncontrado
 from app.repositorios.cuentas import CuentaRepositorio
+from app.servicios.validaciones import validar_dinero
 
-SALDO_MAXIMO = Decimal("999999999999.99")   # lo máximo que cabe en numeric(14,2)
 MENSAJE_NOMBRE_REPETIDO = "Ya tiene una cuenta activa con ese nombre."
 
 
@@ -120,12 +120,7 @@ class CuentaServicio:
         except ValueError:
             opciones = ", ".join(TipoCuenta)
             raise ErrorNegocio(f"El tipo de cuenta no es válido. Opciones: {opciones}.") from None
-        if saldo_inicial < 0:
-            raise ErrorNegocio("El saldo inicial no puede ser negativo.")
-        if saldo_inicial > SALDO_MAXIMO:
-            raise ErrorNegocio("El saldo inicial es demasiado grande.")
-        if saldo_inicial.as_tuple().exponent < -2:
-            raise ErrorNegocio("El saldo inicial admite máximo 2 decimales.")
+        validar_dinero(saldo_inicial, "El saldo inicial", permitir_cero=True)
         return nombre, tipo_cuenta
 
     @staticmethod
