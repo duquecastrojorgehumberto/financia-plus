@@ -301,7 +301,7 @@ Verificado:
   real, historial y archivar. Datos de la verificación eliminados.
 - Las pruebas dejan la base de pruebas vacía (también `bolsillo` y `bolsillo_valor`).
 
-Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
+Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026** (sección 6, P-34 a P-39):
 - **Un bolsillo archivado no se edita ni cambia de valor**: primero se reactiva (como cuentas y
   categorías, P-11 y P-17). Existe la acción **reactivar**; si otro bolsillo activo tiene el mismo
   nombre, se rechaza.
@@ -342,7 +342,7 @@ Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
 | 14 | Resumen financiero e indicadores | Pendiente (**esperando aprobación**) | RF-13, RF-15 |
 | 15 | Datos de prueba y pruebas de CA-01 a CA-15 | Pendiente | `REQUISITOS.md`, sección 4 |
 
-**Siguiente paso recomendado:** confirmar las seis decisiones de la sección 3.11 y luego la Tarea 14 (resumen).
+**Siguiente paso recomendado:** Tarea 14 (resumen financiero), cuando el estudiante la apruebe.
 
 ## 6. Decisiones confirmadas por el estudiante (17 y 22 de noviembre de 2026)
 
@@ -383,6 +383,12 @@ Ya no hay decisiones abiertas.
 | P-31 | ¿El saldo real puede ser negativo? (22/11) | Sí. | `AjusteServicio.ajustar` |
 | P-32 | ¿Qué responde un ajuste sin diferencia? (22/11) | 200 con `"ajuste": null`; no se registra nada. | `POST /api/cuentas/<id>/ajustes` |
 | P-33 | ¿Dónde va la ruta del ajuste? (22/11) | Bajo la cuenta: `POST /api/cuentas/<id>/ajustes`. | `app/rutas/ajustes.py` |
+| P-34 | ¿Un bolsillo archivado se edita o cambia de valor? (22/11) | No: primero se reactiva. Existe reactivar (rechazado si el nombre está ocupado). | `BolsilloServicio` |
+| P-35 | ¿`PUT /api/bolsillos/<id>` reemplaza todo? (22/11) | Sí: sin `monto_objetivo`, queda genérico y sin fecha objetivo. | `app/rutas/bolsillos.py` |
+| P-36 | ¿Cómo viaja el progreso? (22/11) | Porcentaje con 2 decimales como texto (`"35.00"`), o `null` si no es meta. | `BolsilloConValor` |
+| P-37 | ¿El detalle trae el historial? (22/11) | Sí, completo, del más reciente al más antiguo. | `GET /api/bolsillos/<id>` |
+| P-38 | ¿Qué responde cambiar al mismo valor? (22/11) | 200 con `"registrado": false` (201 si se agrega un registro). | `POST /api/bolsillos/<id>/valor` |
+| P-39 | ¿La fecha objetivo puede estar en el pasado? (22/11) | Sí. | `BolsilloServicio` |
 
 D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 4 con dos roles:
 `financia_admin` (migraciones) y `financia_app` (aplicación).
@@ -420,3 +426,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Tarea 12: ajustes de saldo (`AjusteServicio` con `FOR UPDATE`, rutas `/api/cuentas/<id>/ajustes` y `/api/ajustes/<id>`); `tests/test_ajustes.py` con CA-11 y carrera real de RN-55 con prueba de mutación. Servidor probado. **441 pruebas pasan.** |
 | 2026-11-22 | Confirmadas P-29 a P-33 (ajustes: solo fecha y motivo se corrigen, fecha por defecto hoy, saldo real negativo, 200 sin diferencia, ruta bajo la cuenta). |
 | 2026-11-22 | Tarea 13: bolsillos y metas (`Bolsillo`, `BolsilloConValor`, `BolsilloRepositorio` con `DISTINCT ON`, `BolsilloServicio`, rutas `/api/bolsillos`); `tests/test_bolsillos.py` con CA-07, CA-08, CA-09 y prueba de mutación del desempate. Servidor probado. **483 pruebas pasan.** |
+| 2026-11-22 | Confirmadas P-34 a P-39 (bolsillos: archivado no se edita, PUT reemplaza todo, progreso en porcentaje, detalle con historial, 200 sin cambio, fecha objetivo libre). |
