@@ -16,7 +16,7 @@ para la sustentación. Lo único que falta es la interfaz React, que se hace en 
 | --- | --- |
 | **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); ingresos, egresos e historial (Tarea 10); transferencias con cargos (Tarea 11); ajustes de saldo (Tarea 12); bolsillos (Tarea 13); resumen (Tarea 14); datos de prueba (Tarea 15); 522 pruebas. |
 | **Documentado** | Requisitos (17 RF, 10 RNF, 15 criterios), arquitectura, modelo de datos (6 tablas), reglas de negocio, 21 decisiones (todas confirmadas), auditoría del diseño anterior, categorías por defecto, guía de continuidad, instalación y uso diario en `README.md`. |
-| **Pendiente** | Ninguna tarea de la guía. Interfaz: faltan las pantallas de transferencias, ajustes y bolsillos. | La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
+| **Pendiente** | Ninguna tarea de la guía. Interfaz: faltan las pantallas de ajustes y bolsillos. | La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
 
 ## 3. Detalle de lo hecho
 
@@ -488,9 +488,40 @@ demostración se borraron al terminar; `financia` no se tocó):
 - El resumen refleja el egreso nuevo: egresos 116.800 y saldo total 1.006.700 (26.000 más y menos).
 - Vista de celular (375 px) sin desbordamiento.
 
+### 3.18 Interfaz React, paso 5: transferencias
+
+| Pieza | Qué hace |
+| --- | --- |
+| `frontend/src/paginas/Transferencias.tsx` | Lista de transferencias (sale del historial); cada una se abre y muestra sus cargos. Registrar con cero o más cargos; corregir la transferencia; anular y reactivar; agregar, corregir, anular y reactivar cada cargo. |
+| `frontend/src/api/transferencias.ts` | Una función por ruta de `/api/transferencias`. Los cargos se anulan y reactivan con las rutas de movimientos. |
+| `frontend/src/util/categorias.ts` | `ramasUtilizables`: qué categorías ofrecer (las activas y, al corregir, la que ya tiene). La usan movimientos y cargos. 4 pruebas nuevas (47 en total). |
+
+Antes de anular una transferencia con cargos vigentes, la pantalla pide confirmación, porque al
+reactivarla los cargos no vuelven solos (`TransferenciaServicio.reactivar`). Al corregir, la cuenta
+de origen queda bloqueada si hay cargos (RN-72). El total de cargos lo calcula la API.
+
+También: el menú ahora baja de línea en pantallas angostas (con cinco enlaces se salía 92 px a
+375 px de ancho).
+
+Verificado en el navegador con Ana, contra una API conectada a `financia_pruebas` (los datos de
+demostración se borraron al terminar; `financia` no se tocó):
+- Lista: "Ahorro del mes" y la anulada "Transferencia equivocada"; al abrir, su cargo 4×1.000.
+- Agregar un cargo de 1.500: total de cargos vigentes $ 2.300.
+- Anular: pide confirmación (2 cargos); la transferencia y los dos cargos quedan anulados.
+  Reactivar un cargo antes que la transferencia: "Este cargo pertenece a una transferencia
+  anulada...". Reactivar la transferencia: aviso de que los cargos siguen anulados; después se
+  reactiva el 4×1.000 solo (total $ 800).
+- Corregir: origen bloqueado ("tiene cargos"); destino igual al origen: "La cuenta de origen y la
+  de destino deben ser distintas."; destino Bancolombia y 210.000: guardado.
+- Nueva transferencia con dos cargos, uno de 0: "El monto del cargo debe ser mayor que cero." y el
+  historial sigue con 11 movimientos (no se guardó nada, CA-03). Con el cargo corregido: 14
+  movimientos (transferencia y dos cargos, que salen de la cuenta de origen).
+- Corregir un cargo de 1.200 a 1.000: total $ 1.400.
+- Vista de celular (375 px) sin desbordamiento, después de arreglar el menú.
+
 ## 4. Lo que NO existe todavía
 
-- Las demás pantallas de la interfaz: transferencias, ajustes y bolsillos. La API ya ofrece todo lo que necesitan (sección de rutas en `README.md`).
+- Las demás pantallas de la interfaz: ajustes y bolsillos. La API ya ofrece todo lo que necesitan (sección de rutas en `README.md`).
 - Lo aplazado por decisión del proyecto (`REQUISITOS.md`, sección 3): facturas, Gmail,
   presupuestos, recurrentes, tarjetas, renta, notificaciones, auditoría, varias categorías.
 - El repositorio Git no tiene remoto (no se ha subido a GitHub).
@@ -620,3 +651,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Interfaz React, paso 2: pantalla de cuentas (crear, editar, archivar, reactivar) y campo de dinero reutilizable. Probada en el navegador contra la base de pruebas. |
 | 2026-11-22 | Interfaz React, paso 3: pantalla de categorías (árbol por tipo, crear, renombrar, desactivar y reactivar). Probada en el navegador contra la base de pruebas. |
 | 2026-11-22 | Interfaz React, paso 4: pantalla de movimientos (historial con filtros, registrar, corregir, anular y reactivar). Probada en el navegador contra la base de pruebas. |
+| 2026-11-22 | Interfaz React, paso 5: pantalla de transferencias con sus cargos. El menú baja de línea en celulares. Probada en el navegador contra la base de pruebas. |

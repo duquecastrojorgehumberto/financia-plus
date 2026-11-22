@@ -28,6 +28,7 @@ export function Plantilla() {
             Resumen
           </NavLink>
           <NavLink to="/movimientos">Movimientos</NavLink>
+          <NavLink to="/transferencias">Transferencias</NavLink>
           <NavLink to="/cuentas">Cuentas</NavLink>
           <NavLink to="/categorias">Categorías</NavLink>
         </nav>

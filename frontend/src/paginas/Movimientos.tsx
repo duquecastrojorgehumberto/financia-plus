@@ -28,6 +28,7 @@ import type {
 } from "../api/tipos";
 import { CampoDinero } from "../componentes/CampoDinero";
 import { SelectorCategoria } from "../componentes/SelectorCategoria";
+import { ramasUtilizables } from "../util/categorias";
 import { dineroParaCampo, dineroParaEnviar, esDineroValido, formatearFecha, hoy } from "../util/formato";
 import { accionesPermitidas, montoConSigno, NOMBRES_TIPO_MOVIMIENTO, nombreTipo } from "../util/movimientos";
 
@@ -319,9 +320,7 @@ function FormularioMovimiento({ movimiento, catalogos, alGuardar, alCancelar }: 
   // Al corregir, también la cuenta y la categoría que ya tiene: la API conserva una categoría
   // desactivada si no cambia, y dice si la cuenta archivada impide corregir.
   const cuentas = catalogos.cuentas.filter((c) => c.activa || c.id_cuenta === movimiento?.id_cuenta);
-  const ramas = catalogos.categorias[tipo]
-    .filter((r) => r.activa || r.id_categoria === movimiento?.id_categoria)
-    .map((r) => ({ ...r, subcategorias: r.subcategorias.filter((s) => s.activa || s.id_categoria === movimiento?.id_categoria) }));
+  const ramas = ramasUtilizables(catalogos.categorias[tipo], movimiento?.id_categoria);
 
   async function enviar(evento: FormEvent) {
     evento.preventDefault();

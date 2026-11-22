@@ -136,3 +136,24 @@ export interface FiltroHistorial {
   id_categoria?: number;
   estado?: EstadoMovimiento;
 }
+
+/** Una transferencia con sus cargos (RN-34): el usuario la ve como UNA operación. */
+export interface Transferencia extends Movimiento {
+  cargos: Movimiento[];
+  total_cargos: Dinero;   // suma de los cargos VIGENTES, calculada por la API
+}
+
+/** Un cargo: valor real que cobró el banco (RN-36), categoría de egreso y descripción opcional. */
+export interface DatosCargo {
+  monto: Dinero;
+  id_categoria: number;
+  descripcion: string;
+}
+
+export interface DatosTransferencia {
+  id_cuenta_origen: number;
+  id_cuenta_destino: number;
+  monto: Dinero;
+  fecha: string;
+  descripcion: string;
+}
