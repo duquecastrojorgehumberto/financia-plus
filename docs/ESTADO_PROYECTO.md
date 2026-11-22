@@ -16,7 +16,7 @@ para la sustentación. Lo único que falta es la interfaz React, que se hace en 
 | --- | --- |
 | **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); ingresos, egresos e historial (Tarea 10); transferencias con cargos (Tarea 11); ajustes de saldo (Tarea 12); bolsillos (Tarea 13); resumen (Tarea 14); datos de prueba (Tarea 15); 522 pruebas. |
 | **Documentado** | Requisitos (17 RF, 10 RNF, 15 criterios), arquitectura, modelo de datos (6 tablas), reglas de negocio, 21 decisiones (todas confirmadas), auditoría del diseño anterior, categorías por defecto, guía de continuidad, instalación y uso diario en `README.md`. |
-| **Pendiente** | Ninguna tarea de la guía. La interfaz React (`frontend/`) es de otra asignatura. | La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
+| **Pendiente** | Ninguna tarea de la guía. Interfaz: faltan las pantallas de cuentas, categorías, movimientos, transferencias, ajustes y bolsillos. | La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
 
 ## 3. Detalle de lo hecho
 
@@ -378,10 +378,37 @@ Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026*
 - **La lista de categorías por defecto está en dos lugares** (`categorias_por_defecto.py` y el
   SQL); una prueba avisa si dejan de coincidir.
 
+### 3.14 Interfaz React, paso 1: base, sesión y resumen
+
+Elecciones del estudiante (22/11/2026): **React Router y CSS propio, sin librerías de
+componentes**; empezar por la base, la sesión y el resumen, y seguir con una pantalla por paso.
+
+| Pieza | Qué hace |
+| --- | --- |
+| `frontend/vite.config.ts` | Proxy de `/api` hacia Flask: mismo origen, la cookie funciona sin CORS. |
+| `frontend/src/api/cliente.ts` | Todas las peticiones: JSON, cookie, encabezado CSRF y `ErrorApi` con el mensaje de la API. |
+| `frontend/src/sesion/ContextoSesion.tsx` | Sesión en un contexto de React; se consulta al servidor al abrir la página. |
+| `frontend/src/paginas/` | Iniciar sesión, registro y resumen. |
+| `frontend/src/util/formato.ts` | Dinero y fechas sin convertir a número (14 pruebas con Vitest). |
+
+Versiones instaladas y fijadas en `frontend/package.json`: React 19.3.1, React Router 8.5.2,
+Vite 8.3.8, TypeScript 7.0.2, Vitest 5.1.1 (Node 24.22.1).
+
+Verificado en el navegador, contra la API real y la base `financia` con los datos de demostración:
+- Sin sesión, `/` lleva a "Iniciar sesión". Contraseña equivocada: muestra "Correo o contraseña
+  incorrectos.". Con la contraseña de Ana: el resumen muestra saldo 1.032.700, reservado 350.000,
+  egresos 90.800, balance −40.800 (en rojo), ajustes aparte y Alimentación con Mercado.
+- Cambiar a octubre: todo en 0 y "No hay movimientos en este periodo".
+- Recargar la página mantiene la sesión (cookie); "Cerrar sesión" vuelve a "Iniciar sesión".
+- Registro con un correo existente (en mayúsculas): rechazado con el mensaje de la API; no se creó
+  ningún usuario en `financia`.
+- Vista de celular (375 px) sin desbordamiento; con Carla se ve el aviso de CA-10 (−50.000).
+- `npm run build` sin errores de tipos; la consola solo muestra los 401/400 esperados.
+
 ## 4. Lo que NO existe todavía
 
-- La interfaz (`frontend/`), que se desarrolla en otra asignatura. La API ya ofrece todo lo que
-  necesita (sección de rutas en `README.md`).
+- Las demás pantallas de la interfaz: cuentas, categorías, movimientos, transferencias, ajustes
+  y bolsillos. La API ya ofrece todo lo que necesitan (sección de rutas en `README.md`).
 - Lo aplazado por decisión del proyecto (`REQUISITOS.md`, sección 3): facturas, Gmail,
   presupuestos, recurrentes, tarjetas, renta, notificaciones, auditoría, varias categorías.
 - El repositorio Git no tiene remoto (no se ha subido a GitHub).
@@ -508,3 +535,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Confirmadas P-40 a P-44 (resumen: una ruta, mes actual por defecto, indicadores del momento, solo categorías con movimientos, balance sin ajustes). |
 | 2026-11-22 | Tarea 15: datos de prueba (`db/semillas/datos_prueba.sql`, `scripts/cargar_datos_prueba.py`, `tests/test_datos_prueba.py`), matriz de criterios en `tests/LEEME.md` y rutas en `README.md`. **Versión 1 de la API completa: 522 pruebas pasan.** |
 | 2026-11-22 | Confirmadas P-45 a P-48 (datos de prueba). No quedan decisiones abiertas. |
+| 2026-11-22 | Interfaz React, paso 1 (`frontend/`): Vite + React + TypeScript, cliente de la API, sesión (registro, inicio y cierre) y pantalla de resumen. Probada en el navegador contra la API real. |

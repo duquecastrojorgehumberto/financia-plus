@@ -7,7 +7,8 @@ Datos 1 (UTP, Colombia).
 > Flask funcionando con autenticación, cuentas (saldo calculado, archivar con saldo 0),
 > categorías, ingresos, egresos, historial, transferencias con cargos, ajustes de saldo,
 > bolsillos con metas y resumen financiero: **las 15 tareas de la guía están terminadas**, con
-> 522 pruebas automáticas. Falta la interfaz React, que se hace en otra asignatura.** El detalle está en
+> 522 pruebas automáticas. La interfaz React (`frontend/`) ya tiene sesión y resumen; faltan
+> las demás pantallas.** El detalle está en
 > [`docs/ESTADO_PROYECTO.md`](docs/ESTADO_PROYECTO.md).
 
 ## Qué hace (versión 1)
@@ -56,7 +57,7 @@ financia-plus/
 │   ├── migraciones/       Archivos .sql numerados que crean y cambian el esquema
 │   ├── semillas/          Datos iniciales (categorías por defecto) y de prueba
 │   └── consultas/         Consultas de referencia para la sustentación
-├── frontend/              INTERFAZ React + Vite + TypeScript (otra asignatura, pendiente)
+├── frontend/              INTERFAZ React + Vite + TypeScript (sesión y resumen hechos; ver frontend/LEEME.md)
 ├── config/                Configuración por entorno (pendiente)
 ├── scripts/               Utilidades (aplicar migraciones, cargar datos)
 ├── tests/                 Pruebas automáticas
@@ -126,6 +127,14 @@ Cargar los datos de demostración en la base de desarrollo (usuarios `ana@demo.e
 ```
 
 Qué debe verse en cada uno está al inicio de `db/semillas/datos_prueba.sql`.
+
+Arrancar la interfaz (con la API encendida en otra ventana). La primera vez, `npm install`:
+
+```powershell
+cd frontend; npm run dev
+```
+
+Y abrir http://localhost:5173. Detalles en `frontend/LEEME.md`.
 
 ## Rutas de la API
 

@@ -16,3 +16,10 @@ Thumbs.db
 
 # Resultado local de las pruebas
 tests/ultimo_resultado.txt
+
+# Interfaz (frontend/): dependencias instaladas y compilación
+frontend/node_modules/
+frontend/dist/
+
+# Configuración local de Claude Code (servidores de vista previa, permisos)
+.claude/
