@@ -7,9 +7,12 @@ import {
   esDineroValido,
   esNegativo,
   formatearDinero,
+  formatearEjeDinero,
   formatearFecha,
   formatearFechaHora,
+  formatearMes,
   formatearPorcentaje,
+  formatearPorcentajeExacto,
 } from "./formato";
 
 describe("formatearDinero", () => {
@@ -106,5 +109,38 @@ describe("formatearFechaHora", () => {
   it("muestra la hora del computador con dos dígitos", () => {
     const local = new Date(2026, 10, 5, 9, 7);   // 5 nov 2026, 09:07 en la zona del computador
     expect(formatearFechaHora(local.toISOString())).toBe("5 nov 2026, 09:07");
+  });
+});
+
+describe("formatearMes", () => {
+  it.each([
+    ["2026-06", false, "jun"],
+    ["2026-06", true, "junio 2026"],
+    ["2027-01", true, "enero 2027"],
+  ])("%s (largo: %s) → %s", (mes, largo, esperado) => {
+    expect(formatearMes(mes, largo)).toBe(esperado);
+  });
+});
+
+describe("formatearEjeDinero (marcas del eje)", () => {
+  it.each([
+    [0, "$ 0"],
+    [800, "$ 800"],
+    [800000, "$ 800 mil"],
+    [1000000, "$ 1 M"],
+    [2500000, "$ 2,5 M"],
+    [-500000, "−$ 500 mil"],
+  ])("%s → %s", (valor, esperado) => {
+    expect(formatearEjeDinero(valor)).toBe(esperado);
+  });
+});
+
+describe("formatearPorcentajeExacto", () => {
+  it.each([
+    ["2.0", "2,0 %"],
+    ["54.1", "54,1 %"],
+    ["100.0", "100,0 %"],
+  ])("%s → %s", (valor, esperado) => {
+    expect(formatearPorcentajeExacto(valor)).toBe(esperado);
   });
 });

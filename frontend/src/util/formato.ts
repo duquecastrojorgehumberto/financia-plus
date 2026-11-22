@@ -75,3 +75,32 @@ export function formatearFechaHora(iso: string): string {
   const hora = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   return `${d.getDate()} ${MESES[d.getMonth()]} ${d.getFullYear()}, ${hora}`;
 }
+
+const MESES_LARGOS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto",
+  "septiembre", "octubre", "noviembre", "diciembre"];
+
+/** "2026-06" → "jun"; con largo: "junio 2026". */
+export function formatearMes(mes: string, largo = false): string {
+  const [anio, numero] = mes.split("-");
+  return largo ? `${MESES_LARGOS[Number(numero) - 1]} ${anio}` : MESES[Number(numero) - 1];
+}
+
+/**
+ * Para las marcas del eje de un gráfico: 2500000 → "$ 2,5 M"; 800000 → "$ 800 mil".
+ * Recibe un NÚMERO porque las marcas del eje las elige la librería de gráficos; es solo
+ * para leer la escala. Las cifras exactas se muestran siempre con formatearDinero.
+ */
+export function formatearEjeDinero(valor: number): string {
+  const signo = valor < 0 ? "−" : "";
+  const absoluto = Math.abs(valor);
+  if (absoluto >= 1_000_000) {
+    return `${signo}$ ${String(Math.round(absoluto / 100_000) / 10).replace(".", ",")} M`;
+  }
+  if (absoluto >= 1_000) return `${signo}$ ${Math.round(absoluto / 1_000)} mil`;
+  return `${signo}$ ${absoluto}`;
+}
+
+/** "2.0" → "2,0 %"   "54.1" → "54,1 %". Tal como lo envía la API (un decimal), para que una columna de porcentajes quede pareja. */
+export function formatearPorcentajeExacto(valor: string): string {
+  return `${valor.replace(".", ",")} %`;
+}

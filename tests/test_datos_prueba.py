@@ -88,7 +88,7 @@ def test_saldos_de_ana(con_tx, demo):
 def test_indicadores_de_ana(con_tx, demo):
     i = ResumenServicio(con_tx).indicadores(demo["ana"])
     assert (i.saldo_total, i.total_reservado, i.disponible(), i.disponible_negativo()) == (
-        Decimal("1032700.00"), Decimal("350000.00"), Decimal("682700.00"), False)
+        Decimal("1032700.00"), Decimal("620000.00"), Decimal("412700.00"), False)
 
 
 def test_resumen_de_noviembre_de_ana(con_tx, demo):
@@ -100,6 +100,25 @@ def test_resumen_de_noviembre_de_ana(con_tx, demo):
                        "Impuestos y comisiones": Decimal("800.00")}
     alimentacion = next(c for c in p.categorias_egreso if c.nombre == "Alimentación")
     assert (alimentacion.directo, alimentacion.subcategorias[0]["nombre"]) == (Decimal("20000.00"), "Mercado")
+
+
+def test_historial_de_junio_a_octubre_para_los_graficos(con_tx, demo):
+    """Sección 7 del archivo: cada mes con sus totales exactos (si un nombre de categoría
+    estuviera mal escrito, el JOIN descartaría la fila y esta prueba lo detectaría)."""
+    servicio = ResumenServicio(con_tx)
+    meses = {t.mes.strftime("%Y-%m"): (t.ingresos, t.egresos)
+             for t in servicio.mensual(demo["ana"], 6, date(2026, 11, 15))}
+    assert meses == {
+        "2026-06": (Decimal("3000000.00"), Decimal("2350000.00")),
+        "2026-07": (Decimal("2400000.00"), Decimal("2520000.00")),
+        "2026-08": (Decimal("2400000.00"), Decimal("2480000.00")),
+        "2026-09": (Decimal("2800000.00"), Decimal("2810000.00")),
+        "2026-10": (Decimal("2400000.00"), Decimal("2840000.00")),
+        "2026-11": (Decimal("50000.00"), Decimal("90800.00")),
+    }
+    # De junio a noviembre hay 10 categorías raíz de egreso: sirve para probar el grupo "Otras".
+    periodo = servicio.periodo(demo["ana"], date(2026, 6, 1), date(2026, 11, 30))
+    assert len(periodo.categorias_egreso) == 10
 
 
 def test_ca13_el_taxi_anulado_sigue_en_el_historial(con_tx, demo):
@@ -140,7 +159,18 @@ def test_ca07_bolsillo_computador(con_tx, demo):
 def test_bolsillo_archivado_no_suma(con_tx, demo):
     """RN-49, RN-61: Regalos (50.000) está archivado."""
     activos = {b.bolsillo.nombre for b in BolsilloServicio(con_tx).listar(demo["ana"])}
-    assert activos == {"Computador"}
+    assert activos == {"Computador", "Bicicleta", "Curso de inglés"}
+
+
+def test_metas_para_los_graficos(con_tx, demo):
+    """RN-48: progreso de cada meta, calculado por la entidad (puede llegar a 100 %)."""
+    progreso = {b.bolsillo.nombre: (b.valor_actual, b.progreso_porcentaje())
+                for b in BolsilloServicio(con_tx).listar(demo["ana"])}
+    assert progreso == {
+        "Computador": (Decimal("350000.00"), Decimal("35.00")),
+        "Bicicleta": (Decimal("120000.00"), Decimal("30.00")),
+        "Curso de inglés": (Decimal("150000.00"), Decimal("100.00")),
+    }
 
 
 def test_ca15_archivar(con_tx, demo):

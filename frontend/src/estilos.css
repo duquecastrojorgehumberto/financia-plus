@@ -648,6 +648,247 @@ a:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 
+/* ---------- Gráficos ---------- */
+/* Estilo inspirado en ui.shadcn.com/charts: cuadrícula suave, esquinas redondeadas,
+   tooltips en una tarjeta blanca con sombra. Los colores de las series están en
+   src/graficos/colores.ts; aquí solo los del texto y los recuadros. */
+
+.grafico {
+  width: 100%;
+  min-width: 0;
+}
+
+.grafico svg {
+  overflow: visible;   /* que las etiquetas cerca del borde no se corten */
+}
+
+.grafico .recharts-surface:focus,
+.grafico .recharts-wrapper:focus,
+.dona-grafico .recharts-wrapper:focus {
+  outline: none;
+}
+
+.cifra-svg {
+  font-variant-numeric: tabular-nums;
+}
+
+.tooltip-grafico {
+  min-width: 190px;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(16, 24, 40, 0.12);
+  padding: 0.55rem 0.7rem;
+  font-size: 0.82rem;
+  color: var(--color-texto);
+}
+
+.tooltip-titulo {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.tooltip-linea {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.1rem 0;
+}
+
+.tooltip-linea > span:first-child {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.tooltip-linea.suave {
+  color: var(--color-suave);
+}
+
+.tooltip-separador {
+  border-top: 1px solid var(--color-borde);
+  margin: 0.3rem 0;
+}
+
+.punto {
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.numero {
+  font-variant-numeric: tabular-nums;
+}
+
+.suave {
+  color: var(--color-suave);
+}
+
+.leyenda-series {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0.5rem;
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  font-size: 0.85rem;
+  color: var(--color-texto);
+}
+
+.leyenda-series.centrada {
+  justify-content: center;
+  padding: 0.5rem 0 0;
+}
+
+.leyenda-series li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Dona y anillos: gráfico a un lado, leyenda al otro (debajo en celular o en la variante B). */
+.dona {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.dona-abajo {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.dona-abajo .dona-grafico {
+  align-self: center;
+}
+
+.dona-grafico {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.dona-centro {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;   /* deja pasar el mouse a las porciones */
+  font-size: 0.8rem;
+  color: var(--color-suave);
+}
+
+.dona-centro strong {
+  font-size: 1.05rem;
+  color: var(--color-texto);
+  font-variant-numeric: tabular-nums;
+}
+
+.leyenda-dona {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1 1 260px;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.88rem;
+}
+
+.dona-abajo .leyenda-dona {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  column-gap: 1.5rem;
+}
+
+.leyenda-dona li {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.leyenda-nombre {
+  overflow-wrap: anywhere;
+}
+
+/* Metas en tarjetas (variante C): el detalle flota al pasar el mouse o al enfocar. */
+.metas-tarjetas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: 0.75rem;
+}
+
+.meta-tarjeta {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  cursor: default;
+}
+
+.meta-cabecera {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.meta-flotante {
+  display: none;
+  position: absolute;
+  left: 0.5rem;
+  top: calc(100% - 0.25rem);
+  z-index: 5;
+}
+
+.meta-tarjeta:hover .meta-flotante,
+.meta-tarjeta:focus .meta-flotante {
+  display: block;
+}
+
+/* Galería (temporal) */
+.galeria h2 .subtitulo {
+  font-weight: 400;
+  font-size: 0.9rem;
+}
+
+.variante {
+  margin-bottom: 1rem;
+}
+
+.variante-cabecera {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  color: var(--color-suave);
+}
+
+.variante-letra {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 10px;
+  background: var(--color-texto);
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
 /* ---------- Transferencias ---------- */
 
 .lista-transferencias {

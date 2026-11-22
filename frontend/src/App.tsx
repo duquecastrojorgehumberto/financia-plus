@@ -18,6 +18,7 @@ import { Ajustes } from "./paginas/Ajustes";
 import { Bolsillos } from "./paginas/Bolsillos";
 import { Categorias } from "./paginas/Categorias";
 import { Cuentas } from "./paginas/Cuentas";
+import { GaleriaGraficos } from "./paginas/GaleriaGraficos";
 import { IniciarSesion } from "./paginas/IniciarSesion";
 import { Movimientos } from "./paginas/Movimientos";
 import { Registro } from "./paginas/Registro";
@@ -41,6 +42,8 @@ export function App() {
               <Route path="/transferencias" element={<Transferencias />} />
               <Route path="/ajustes" element={<Ajustes />} />
               <Route path="/bolsillos" element={<Bolsillos />} />
+              {/* TEMPORAL (gráficos, etapa 2): se borra al integrar las variantes elegidas. */}
+              <Route path="/galeria-graficos" element={<GaleriaGraficos />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -26,10 +26,14 @@ export interface Indicadores {
   disponible_negativo: boolean;
 }
 
+/** Un porcentaje calculado por la API, con un decimal: "55.1". La interfaz no lo calcula. */
+export type Porcentaje = string;
+
 export interface TotalSubcategoria {
   id_categoria: number;
   nombre: string;
   total: Dinero;
+  porcentaje: Porcentaje;   // sobre el total de su tipo (no sobre su raíz)
 }
 
 /** Una categoría raíz con su total consolidado (RN-27): total = directo + subcategorías. */
@@ -37,7 +41,9 @@ export interface TotalCategoria {
   id_categoria: number;
   nombre: string;
   total: Dinero;
+  porcentaje: Porcentaje;          // sobre el total de su tipo (ingresos o egresos)
   directo: Dinero;
+  porcentaje_directo: Porcentaje;
   subcategorias: TotalSubcategoria[];
 }
 
@@ -54,6 +60,14 @@ export interface ResumenPeriodo {
 export interface RespuestaResumen {
   indicadores: Indicadores;
   periodo: ResumenPeriodo;
+}
+
+/** Un mes del resumen mensual (GET /api/resumen/mensual). mes: "2026-06". */
+export interface TotalMes {
+  mes: string;
+  ingresos: Dinero;
+  egresos: Dinero;
+  balance: Dinero;
 }
 
 /** Valores permitidos por la base (ck_cuenta_tipo, D-16). */

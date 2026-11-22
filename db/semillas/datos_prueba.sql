@@ -29,10 +29,16 @@
 --     Mascotas (categoría)   CA-14: desactivada; su movimiento se conserva y sigue sumando.
 --     Bolsillo "Computador"  CA-07: meta 1.000.000; historial 0 → 350.000; progreso 35 %.
 --     Bolsillo "Regalos"     RN-49: archivado con 50.000; no suma en el total reservado.
---     Indicadores: saldo total 1.032.700; reservado 350.000; disponible 682.700.
+--     Bolsillos "Bicicleta" (meta 400.000, valor 120.000: 30 %) y "Curso de inglés"
+--       (meta 150.000, valor 150.000: 100 %, cumplida), para los gráficos de metas.
+--     Indicadores: saldo total 1.032.700; reservado 620.000 (350.000 + 120.000 + 150.000);
+--       disponible 412.700.
 --     Resumen de noviembre: ingresos 50.000; egresos 90.800 (20.000 + 30.000 + 40.000 + 800);
 --       ajustes aparte: disminuciones 6.500.
 --       CA-12: Alimentación 50.000 = 20.000 directos + Mercado 30.000.
+--     Historial de junio a octubre (sección 7, para los gráficos): ingresos 13.000.000 y
+--       egresos 13.000.000 en Bancolombia; se compensan, así que ningún saldo cambia.
+--       Con 9 categorías de egreso en el periodo (junio a noviembre: 10 con Mascotas).
 --   Beto (CA-06)  Nequi 70.000. Ana no puede usar su cuenta ni sus categorías.
 --   Carla
 --     Nequi 200.000 y Nubank 100.000 tras una transferencia de 100.000 (CA-09).
@@ -204,6 +210,8 @@ SELECT u.id_usuario, v.nombre, v.descripcion, v.monto_objetivo, v.fecha_objetivo
   FROM (VALUES
    ('ana@demo.example',   'Computador',  'Portátil para la universidad', 1000000.00, DATE '2027-06-30', true),   -- CA-07
    ('ana@demo.example',   'Regalos',     'Regalos de diciembre',         NULL,       NULL,              false),  -- RN-49
+   ('ana@demo.example',   'Bicicleta',   'Para ir a la universidad',      400000.00, DATE '2027-03-31', true),
+   ('ana@demo.example',   'Curso de inglés', NULL,                        150000.00, NULL,              true),
    ('carla@demo.example', 'Viaje',       NULL,                           NULL,       NULL,              true),   -- CA-09, CA-10
    ('carla@demo.example', 'Emergencias', NULL,                           NULL,       NULL,              true)    -- CA-10
  ) AS v (correo, nombre, descripcion, monto_objetivo, fecha_objetivo, activo)
@@ -215,6 +223,9 @@ SELECT b.id_usuario, b.id_bolsillo, v.valor, v.registrado_en
    ('ana@demo.example',   'Computador',        0.00, TIMESTAMPTZ '2026-11-01 09:00:00-05'),
    ('ana@demo.example',   'Computador',   350000.00, TIMESTAMPTZ '2026-11-15 18:30:00-05'),   -- CA-07
    ('ana@demo.example',   'Regalos',       50000.00, TIMESTAMPTZ '2026-11-02 10:00:00-05'),
+   ('ana@demo.example',   'Bicicleta',     50000.00, TIMESTAMPTZ '2026-09-10 19:00:00-05'),
+   ('ana@demo.example',   'Bicicleta',    120000.00, TIMESTAMPTZ '2026-10-28 20:15:00-05'),
+   ('ana@demo.example',   'Curso de inglés', 150000.00, TIMESTAMPTZ '2026-08-05 12:00:00-05'),
    ('carla@demo.example', 'Viaje',        200000.00, TIMESTAMPTZ '2026-11-01 08:00:00-05'),   -- antes de la transferencia (CA-09)
    ('carla@demo.example', 'Emergencias',  150000.00, TIMESTAMPTZ '2026-11-01 08:05:00-05')
  ) AS v (correo, nombre_bolsillo, valor, registrado_en)
@@ -222,5 +233,86 @@ SELECT b.id_usuario, b.id_bolsillo, v.valor, v.registrado_en
     ON u.correo = v.correo
   JOIN bolsillo b
     ON b.id_usuario = u.id_usuario AND b.nombre = v.nombre_bolsillo;
+
+-- ---------------------------------------------------------------------
+-- 7. Historial de Ana de junio a octubre de 2026 (para los gráficos del resumen).
+--    Todo en Bancolombia: ingresos 13.000.000 y egresos 13.000.000 en el periodo.
+--    Se compensan, así que NINGÚN saldo cambia y todo lo de noviembre sigue igual.
+--    Por mes (ingresos / egresos):
+--      junio 3.000.000 / 2.350.000   julio 2.400.000 / 2.520.000   agosto 2.400.000 / 2.480.000
+--      septiembre 2.800.000 / 2.810.000   octubre 2.400.000 / 2.840.000
+-- ---------------------------------------------------------------------
+INSERT INTO movimiento (id_usuario, tipo, id_cuenta, id_categoria, monto, fecha, descripcion)
+SELECT u.id_usuario, v.tipo, c.id_cuenta, cat.id_categoria, v.monto, v.fecha, v.descripcion
+  FROM (VALUES
+   ('INGRESO', 'Sueldo', 2400000.00, DATE '2026-06-01', 'Sueldo de junio'),
+   ('INGRESO', 'Primas y bonificaciones', 600000.00, DATE '2026-06-30', 'Prima de mitad de año'),
+   ('INGRESO', 'Sueldo', 2400000.00, DATE '2026-07-01', 'Sueldo de julio'),
+   ('INGRESO', 'Sueldo', 2400000.00, DATE '2026-08-01', 'Sueldo de agosto'),
+   ('INGRESO', 'Sueldo', 2400000.00, DATE '2026-09-01', 'Sueldo de septiembre'),
+   ('INGRESO', 'Trabajo independiente', 400000.00, DATE '2026-09-20', 'Diseño de un logo'),
+   ('INGRESO', 'Sueldo', 2400000.00, DATE '2026-10-01', 'Sueldo de octubre'),
+   ('EGRESO',  'Arriendo', 1200000.00, DATE '2026-06-02', 'Arriendo'),
+   ('EGRESO',  'Servicios públicos', 185000.00, DATE '2026-06-04', 'Luz, agua e internet'),
+   ('EGRESO',  'Mercado', 420000.00, DATE '2026-06-06', 'Mercado del mes'),
+   ('EGRESO',  'Restaurantes', 95000.00, DATE '2026-06-08', 'Almuerzos'),
+   ('EGRESO',  'Transporte público', 88000.00, DATE '2026-06-10', 'Recargas de la tarjeta'),
+   ('EGRESO',  'Suscripciones', 45000.00, DATE '2026-06-12', 'Streaming y música'),
+   ('EGRESO',  'Ropa y cuidado personal', 210000.00, DATE '2026-06-14', 'Zapatos'),
+   ('EGRESO',  'Medicamentos', 62000.00, DATE '2026-06-16', 'Farmacia'),
+   ('EGRESO',  '4×1.000', 9600.00, DATE '2026-06-18', '4×1.000 del mes'),
+   ('EGRESO',  'Otros gastos', 35400.00, DATE '2026-06-20', 'Varios'),
+   ('EGRESO',  'Arriendo', 1200000.00, DATE '2026-07-02', 'Arriendo'),
+   ('EGRESO',  'Servicios públicos', 192000.00, DATE '2026-07-04', 'Luz, agua e internet'),
+   ('EGRESO',  'Mercado', 435000.00, DATE '2026-07-06', 'Mercado del mes'),
+   ('EGRESO',  'Restaurantes', 140000.00, DATE '2026-07-08', 'Almuerzos y una cena'),
+   ('EGRESO',  'Transporte público', 92000.00, DATE '2026-07-10', 'Recargas de la tarjeta'),
+   ('EGRESO',  'Combustible', 120000.00, DATE '2026-07-12', 'Gasolina del viaje'),
+   ('EGRESO',  'Suscripciones', 45000.00, DATE '2026-07-14', 'Streaming y música'),
+   ('EGRESO',  'Salidas', 160000.00, DATE '2026-07-16', 'Vacaciones'),
+   ('EGRESO',  'Libros y cursos', 85000.00, DATE '2026-07-18', 'Curso en línea'),
+   ('EGRESO',  '4×1.000', 10100.00, DATE '2026-07-20', '4×1.000 del mes'),
+   ('EGRESO',  'Otros gastos', 40900.00, DATE '2026-07-22', 'Varios'),
+   ('EGRESO',  'Arriendo', 1200000.00, DATE '2026-08-02', 'Arriendo'),
+   ('EGRESO',  'Servicios públicos', 201000.00, DATE '2026-08-04', 'Luz, agua e internet'),
+   ('EGRESO',  'Mercado', 410000.00, DATE '2026-08-06', 'Mercado del mes'),
+   ('EGRESO',  'Domicilios', 76000.00, DATE '2026-08-08', 'Domicilios'),
+   ('EGRESO',  'Transporte público', 95000.00, DATE '2026-08-10', 'Recargas de la tarjeta'),
+   ('EGRESO',  'Consultas', 150000.00, DATE '2026-08-12', 'Odontólogo'),
+   ('EGRESO',  'Suscripciones', 45000.00, DATE '2026-08-14', 'Streaming y música'),
+   ('EGRESO',  'Ropa y cuidado personal', 98000.00, DATE '2026-08-16', 'Peluquería'),
+   ('EGRESO',  '4×1.000', 9900.00, DATE '2026-08-18', '4×1.000 del mes'),
+   ('EGRESO',  'Hogar y aseo', 120000.00, DATE '2026-08-20', 'Aseo de la casa'),
+   ('EGRESO',  'Otros gastos', 75100.00, DATE '2026-08-22', 'Varios'),
+   ('EGRESO',  'Arriendo', 1200000.00, DATE '2026-09-02', 'Arriendo'),
+   ('EGRESO',  'Servicios públicos', 188000.00, DATE '2026-09-04', 'Luz, agua e internet'),
+   ('EGRESO',  'Mercado', 445000.00, DATE '2026-09-06', 'Mercado del mes'),
+   ('EGRESO',  'Restaurantes', 130000.00, DATE '2026-09-08', 'Almuerzos'),
+   ('EGRESO',  'Transporte público', 90000.00, DATE '2026-09-10', 'Recargas de la tarjeta'),
+   ('EGRESO',  'Matrículas', 520000.00, DATE '2026-09-12', 'Matrícula del semestre'),
+   ('EGRESO',  'Suscripciones', 45000.00, DATE '2026-09-14', 'Streaming y música'),
+   ('EGRESO',  'Salidas', 95000.00, DATE '2026-09-16', 'Cine y bolos'),
+   ('EGRESO',  '4×1.000', 11200.00, DATE '2026-09-18', '4×1.000 del mes'),
+   ('EGRESO',  'Otros gastos', 85800.00, DATE '2026-09-20', 'Varios'),
+   ('EGRESO',  'Arriendo', 1200000.00, DATE '2026-10-02', 'Arriendo'),
+   ('EGRESO',  'Servicios públicos', 196000.00, DATE '2026-10-04', 'Luz, agua e internet'),
+   ('EGRESO',  'Mercado', 430000.00, DATE '2026-10-06', 'Mercado del mes'),
+   ('EGRESO',  'Restaurantes', 110000.00, DATE '2026-10-08', 'Almuerzos'),
+   ('EGRESO',  'Domicilios', 64000.00, DATE '2026-10-10', 'Domicilios'),
+   ('EGRESO',  'Combustible', 130000.00, DATE '2026-10-12', 'Gasolina'),
+   ('EGRESO',  'Transporte público', 91000.00, DATE '2026-10-14', 'Recargas de la tarjeta'),
+   ('EGRESO',  'Medicamentos', 48000.00, DATE '2026-10-16', 'Farmacia'),
+   ('EGRESO',  'Suscripciones', 45000.00, DATE '2026-10-18', 'Streaming y música'),
+   ('EGRESO',  'Salidas', 210000.00, DATE '2026-10-20', 'Concierto'),
+   ('EGRESO',  'Ropa y cuidado personal', 260000.00, DATE '2026-10-22', 'Chaqueta'),
+   ('EGRESO',  '4×1.000', 10800.00, DATE '2026-10-24', '4×1.000 del mes'),
+   ('EGRESO',  'Otros gastos', 45200.00, DATE '2026-10-26', 'Varios')
+ ) AS v (tipo, nombre_categoria, monto, fecha, descripcion)
+  JOIN usuario u
+    ON u.correo = 'ana@demo.example'
+  JOIN cuenta c
+    ON c.id_usuario = u.id_usuario AND c.nombre = 'Bancolombia'
+  JOIN categoria cat
+    ON cat.id_usuario = u.id_usuario AND cat.nombre = v.nombre_categoria;
 
 COMMIT;

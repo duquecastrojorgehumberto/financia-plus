@@ -7,7 +7,7 @@ Datos 1 (UTP, Colombia).
 > Flask funcionando con autenticación, cuentas (saldo calculado, archivar con saldo 0),
 > categorías, ingresos, egresos, historial, transferencias con cargos, ajustes de saldo,
 > bolsillos con metas y resumen financiero: **las 15 tareas de la guía están terminadas**, con
-> 548 pruebas automáticas. La interfaz React (`frontend/`) tiene todas las pantallas,
+> 550 pruebas automáticas. La interfaz React (`frontend/`) tiene todas las pantallas,
 > probadas en el navegador contra la API.** El detalle está en
 > [`docs/ESTADO_PROYECTO.md`](docs/ESTADO_PROYECTO.md).
 
