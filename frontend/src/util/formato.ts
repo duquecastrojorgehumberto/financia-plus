@@ -46,9 +46,13 @@ export function dineroParaCampo(valor: string): string {
   return /^0*$/.test(decimales) ? entero : `${entero},${decimales}`;
 }
 
-/** true si el texto del campo es un monto bien escrito: dígitos y hasta 2 decimales. */
-export function esDineroValido(texto: string): boolean {
-  return /^\d+(\.\d{1,2})?$/.test(dineroParaEnviar(texto));
+/**
+ * true si el texto del campo es un monto bien escrito: dígitos y hasta 2 decimales.
+ * Con permitirNegativo acepta un "-" al inicio (por ejemplo, el saldo real de una cuenta, RN-14).
+ */
+export function esDineroValido(texto: string, permitirNegativo = false): boolean {
+  const patron = permitirNegativo ? /^-?\d+(\.\d{1,2})?$/ : /^\d+(\.\d{1,2})?$/;
+  return patron.test(dineroParaEnviar(texto));
 }
 
 /** La fecha de hoy en el computador del usuario, como "AAAA-MM-DD" (no en UTC). */

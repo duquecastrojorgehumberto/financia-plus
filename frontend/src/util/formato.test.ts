@@ -77,4 +77,14 @@ describe("dinero escrito por el usuario", () => {
   ])("esDineroValido(%s) → %s", (texto, esperado) => {
     expect(esDineroValido(texto)).toBe(esperado);
   });
+
+  it.each([
+    ["-50000", true],
+    ["-50000,5", true],
+    ["50000", true],
+    ["--5", false],
+    ["5-", false],
+  ])("esDineroValido(%s, permitirNegativo) → %s", (texto, esperado) => {
+    expect(esDineroValido(texto, true)).toBe(esperado);
+  });
 });

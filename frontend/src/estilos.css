@@ -576,6 +576,22 @@ a:focus-visible {
   text-decoration: line-through;   /* sigue visible, pero no cuenta (RN-70) */
 }
 
+/* ---------- Ajustes ---------- */
+
+.aviso.exito {
+  background: #e8f5ef;
+  border-color: var(--color-principal);
+}
+
+.negativo {
+  color: var(--color-negativo);
+}
+
+.movimiento-edicion {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--color-borde);
+}
+
 /* ---------- Transferencias ---------- */
 
 .lista-transferencias {

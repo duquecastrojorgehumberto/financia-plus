@@ -11,14 +11,16 @@ interface Propiedades {
   alCambiar: (valor: string) => void;
   deshabilitado?: boolean;
   ayuda?: string;
+  /** Acepta un "-" al inicio (por ejemplo, el saldo real de una cuenta en negativo). */
+  permitirNegativo?: boolean;
 }
 
-export function CampoDinero({ etiqueta, valor, alCambiar, deshabilitado = false, ayuda }: Propiedades) {
-  const vistaPrevia = esDineroValido(valor) ? formatearDinero(dineroParaEnviar(valor)) : null;
+export function CampoDinero({ etiqueta, valor, alCambiar, deshabilitado = false, ayuda, permitirNegativo = false }: Propiedades) {
+  const vistaPrevia = esDineroValido(valor, permitirNegativo) ? formatearDinero(dineroParaEnviar(valor)) : null;
   return (
     <label>
       {etiqueta}
-      <input type="text" inputMode="decimal" value={valor} onChange={(e) => alCambiar(e.target.value)}
+      <input type="text" inputMode={permitirNegativo ? "text" : "decimal"} value={valor} onChange={(e) => alCambiar(e.target.value)}
              disabled={deshabilitado} placeholder="0" required />
       <span className="ayuda">
         {vistaPrevia ?? "Solo números, sin puntos de miles. Centavos con coma: 150000,50"}

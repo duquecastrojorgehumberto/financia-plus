@@ -157,3 +157,10 @@ export interface DatosTransferencia {
   fecha: string;
   descripcion: string;
 }
+
+/** Lo que responde la API al ajustar un saldo (RF-17). ajuste es null si el saldo ya coincidía (RN-51). */
+export interface ResultadoAjuste {
+  saldo_anterior: Dinero;
+  cuenta: Cuenta;
+  ajuste: Movimiento | null;
+}

@@ -16,7 +16,7 @@ para la sustentación. Lo único que falta es la interfaz React, que se hace en 
 | --- | --- |
 | **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); ingresos, egresos e historial (Tarea 10); transferencias con cargos (Tarea 11); ajustes de saldo (Tarea 12); bolsillos (Tarea 13); resumen (Tarea 14); datos de prueba (Tarea 15); 522 pruebas. |
 | **Documentado** | Requisitos (17 RF, 10 RNF, 15 criterios), arquitectura, modelo de datos (6 tablas), reglas de negocio, 21 decisiones (todas confirmadas), auditoría del diseño anterior, categorías por defecto, guía de continuidad, instalación y uso diario en `README.md`. |
-| **Pendiente** | Ninguna tarea de la guía. Interfaz: faltan las pantallas de ajustes y bolsillos. | La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
+| **Pendiente** | Ninguna tarea de la guía. Interfaz: falta la pantalla de bolsillos. | La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
 
 ## 3. Detalle de lo hecho
 
@@ -519,9 +519,33 @@ demostración se borraron al terminar; `financia` no se tocó):
 - Corregir un cargo de 1.200 a 1.000: total $ 1.400.
 - Vista de celular (375 px) sin desbordamiento, después de arreglar el menú.
 
+### 3.19 Interfaz React, paso 6: ajustes de saldo
+
+| Pieza | Qué hace |
+| --- | --- |
+| `frontend/src/paginas/Ajustes.tsx` | Ajustar el saldo de una cuenta escribiendo el saldo real (muestra el saldo calculado como referencia); el resultado que responde la API; la lista de ajustes para corregir fecha y motivo, anular y reactivar. |
+| `frontend/src/api/ajustes.ts` | `ajustarSaldo`, `corregirAjuste` y `listarAjustes` (los dos tipos, del historial). |
+| `frontend/src/util/formato.ts` | `esDineroValido(texto, permitirNegativo)`: el saldo real puede ser negativo (RN-14). `CampoDinero` acepta `permitirNegativo`. 5 pruebas nuevas (52 en total). |
+
+La pantalla no calcula la diferencia: envía el saldo real y muestra lo que respondió la API
+(saldo anterior, saldo nuevo y el ajuste, o que no hizo falta, RN-51). El monto de un ajuste no se
+corrige (sale de un cálculo); la pantalla lo explica y ofrece anular y hacer otro.
+
+Verificado en el navegador con Ana, contra una API conectada a `financia_pruebas` (los datos de
+demostración se borraron al terminar; `financia` no se tocó):
+- Nequi (calculado 229.200), saldo real 230.000: "el saldo pasó de $ 229.200 a $ 230.000. Se
+  registró un ajuste de aumento por $ 800."; aparece primero en la lista.
+- El mismo saldo otra vez: "ya era $ 230.000: no hizo falta ningún ajuste." y no se agrega nada.
+- Efectivo (130.000), saldo real "-5000": disminución de $ 135.000 y saldo nuevo −$ 5.000 en rojo.
+- Corregir el motivo con solo espacios: "El motivo del ajuste es obligatorio."; con texto: guardado.
+- Anular: tachado y el saldo de Efectivo vuelve a 130.000; reactivar: vuelve a −5.000.
+- Resumen: saldo total 898.500 (+800 −135.000); egresos siguen en 90.800 (RN-53) y la nota de ajustes
+  muestra aumentos $ 800 y disminuciones $ 141.500.
+- Vista de celular (375 px) sin desbordamiento.
+
 ## 4. Lo que NO existe todavía
 
-- Las demás pantallas de la interfaz: ajustes y bolsillos. La API ya ofrece todo lo que necesitan (sección de rutas en `README.md`).
+- La pantalla de bolsillos de la interfaz. La API ya ofrece todo lo que necesitan (sección de rutas en `README.md`).
 - Lo aplazado por decisión del proyecto (`REQUISITOS.md`, sección 3): facturas, Gmail,
   presupuestos, recurrentes, tarjetas, renta, notificaciones, auditoría, varias categorías.
 - El repositorio Git no tiene remoto (no se ha subido a GitHub).
@@ -652,3 +676,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Interfaz React, paso 3: pantalla de categorías (árbol por tipo, crear, renombrar, desactivar y reactivar). Probada en el navegador contra la base de pruebas. |
 | 2026-11-22 | Interfaz React, paso 4: pantalla de movimientos (historial con filtros, registrar, corregir, anular y reactivar). Probada en el navegador contra la base de pruebas. |
 | 2026-11-22 | Interfaz React, paso 5: pantalla de transferencias con sus cargos. El menú baja de línea en celulares. Probada en el navegador contra la base de pruebas. |
+| 2026-11-22 | Interfaz React, paso 6: pantalla de ajustes de saldo. Probada en el navegador contra la base de pruebas. |
