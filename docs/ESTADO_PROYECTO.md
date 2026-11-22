@@ -124,7 +124,7 @@ tenía el `FOR UPDATE`. Se cortó la ejecución, se borraron a mano el usuario y
 había dejado en `financia_pruebas`, y la prueba ahora libera el bloqueo antes de limpiar y pone
 un tope de 5 s a la limpieza.
 
-Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
+Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026** (sección 6, P-11 a P-14):
 - **Una cuenta archivada no se edita**: primero se reactiva (como sus movimientos, RN-12).
 - **Hay acción "reactivar"** (RN-12 la menciona; RF-02 no la nombra). Si al reactivar ya existe
   otra cuenta activa con el mismo nombre, se rechaza y se pide renombrar esa otra.
@@ -161,7 +161,7 @@ Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
 | 14 | Resumen financiero e indicadores | Pendiente | RF-13, RF-15 |
 | 15 | Datos de prueba y pruebas de CA-01 a CA-15 | Pendiente | `REQUISITOS.md`, sección 4 |
 
-**Siguiente paso recomendado:** confirmar las cuatro decisiones de la sección 3.6 y luego la Tarea 9 (categorías).
+**Siguiente paso recomendado:** Tarea 9 (categorías), cuando el estudiante la apruebe.
 
 ## 6. Decisiones confirmadas por el estudiante (17 y 22 de noviembre de 2026)
 
@@ -179,6 +179,10 @@ Ya no hay decisiones abiertas.
 | P-8 | ¿Longitud mínima de la contraseña? (22/11) | 8 caracteres. | `LONGITUD_MINIMA_CLAVE` en `app/servicios/autenticacion.py` |
 | P-9 | ¿El registro deja la sesión iniciada? (22/11) | Sí. | `POST /api/registro` |
 | P-10 | ¿`@requiere_sesion` revisa en cada petición si el usuario sigue activo? (22/11) | No: solo la cookie. `GET /api/sesion` sí lo revisa. | `app/sesion.py` |
+| P-11 | ¿Se puede editar una cuenta archivada? (22/11) | No: primero se reactiva. | `CuentaServicio.editar` |
+| P-12 | ¿Existe la acción "reactivar cuenta"? (22/11) | Sí. Si otra cuenta activa tiene el mismo nombre, se rechaza y se pide renombrar esa otra. | `CuentaServicio.reactivar` |
+| P-13 | ¿Los movimientos anulados fijan el saldo inicial (RN-13)? (22/11) | Sí: cualquier movimiento, vigente o anulado. | `CuentaRepositorio.tiene_movimientos` |
+| P-14 | ¿El saldo inicial es obligatorio al crear? (22/11) | No: si no se envía, vale 0. | `POST /api/cuentas` |
 
 D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 4 con dos roles:
 `financia_admin` (migraciones) y `financia_app` (aplicación).
@@ -206,3 +210,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Tarea 7: autenticación (entidades, repositorios y servicio de usuario y categoría; sesión y `@requiere_sesion`; rutas `/api/registro` y `/api/sesion`); `tests/test_autenticacion.py`. Servidor probado. **189 pruebas pasan.** |
 | 2026-11-22 | Confirmadas P-8 a P-10 (contraseña de 8 caracteres o más, el registro inicia sesión, `@requiere_sesion` solo revisa la cookie). |
 | 2026-11-22 | Tarea 8: cuentas (entidad `Cuenta`/`CuentaConSaldo`, `CuentaRepositorio` con el saldo calculado, `CuentaServicio`, rutas `/api/cuentas`); `tests/test_cuentas.py` con prueba real del bloqueo `FOR UPDATE`. Servidor probado. **239 pruebas pasan.** |
+| 2026-11-22 | Confirmadas P-11 a P-14 (cuenta archivada no se edita, reactivar, anulados fijan el saldo inicial, saldo inicial opcional). |
