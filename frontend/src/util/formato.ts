@@ -61,3 +61,17 @@ export function hoy(ahora: Date = new Date()): string {
   const dia = String(ahora.getDate()).padStart(2, "0");
   return `${ahora.getFullYear()}-${mes}-${dia}`;
 }
+
+/** "35.00" → "35 %"   "33.33" → "33,33 %"   "120.50" → "120,5 %"   (el porcentaje lo calcula la API) */
+export function formatearPorcentaje(valor: string): string {
+  const [entero, decimales = ""] = valor.split(".");
+  const sinCeros = decimales.replace(/0+$/, "");
+  return `${sinCeros ? `${entero},${sinCeros}` : entero} %`;
+}
+
+/** Fecha y hora de un registro ("2026-11-05T14:30:00-05:00") en la hora del computador: "5 nov 2026, 14:30". */
+export function formatearFechaHora(iso: string): string {
+  const d = new Date(iso);
+  const hora = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  return `${d.getDate()} ${MESES[d.getMonth()]} ${d.getFullYear()}, ${hora}`;
+}

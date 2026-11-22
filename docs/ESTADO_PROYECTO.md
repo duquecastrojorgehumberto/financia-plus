@@ -16,7 +16,7 @@ para la sustentación. Lo único que falta es la interfaz React, que se hace en 
 | --- | --- |
 | **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); ingresos, egresos e historial (Tarea 10); transferencias con cargos (Tarea 11); ajustes de saldo (Tarea 12); bolsillos (Tarea 13); resumen (Tarea 14); datos de prueba (Tarea 15); 522 pruebas. |
 | **Documentado** | Requisitos (17 RF, 10 RNF, 15 criterios), arquitectura, modelo de datos (6 tablas), reglas de negocio, 21 decisiones (todas confirmadas), auditoría del diseño anterior, categorías por defecto, guía de continuidad, instalación y uso diario en `README.md`. |
-| **Pendiente** | Ninguna tarea de la guía. Interfaz: falta la pantalla de bolsillos. | La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
+| **Pendiente** | Ninguna tarea de la guía. La interfaz tiene todas las pantallas (secciones 3.14 a 3.20). | La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
 
 ## 3. Detalle de lo hecho
 
@@ -543,13 +543,34 @@ demostración se borraron al terminar; `financia` no se tocó):
   muestra aumentos $ 800 y disminuciones $ 141.500.
 - Vista de celular (375 px) sin desbordamiento.
 
+### 3.20 Interfaz React, paso 7: bolsillos (interfaz completa)
+
+| Pieza | Qué hace |
+| --- | --- |
+| `frontend/src/paginas/Bolsillos.tsx` | Bolsillos y metas en tarjetas: valor actual, barra de progreso de la meta (el porcentaje lo calcula la API), historial de valores, crear, editar, cambiar valor, archivar y reactivar; casilla para ver los archivados. |
+| `frontend/src/api/bolsillos.ts` | Una función por ruta de `/api/bolsillos`. |
+| `frontend/src/util/formato.ts` | `formatearPorcentaje` ("35.00" → "35 %") y `formatearFechaHora` (registros del historial). 5 pruebas nuevas (57 en total). |
+
+El valor se escribe directamente (el total, no un aporte, RN-42) desde "Cambiar valor", nunca desde
+"Editar", para que cada cambio quede en el historial (RN-44). La barra usa `Number()` solo para su
+ancho (un dibujo), con tope de 100 %; el texto muestra el porcentaje real, que puede pasar de 100.
+
+Verificado en el navegador con Ana, contra una API conectada a `financia_pruebas` (los datos de
+demostración se borraron al terminar; `financia` no se tocó):
+- "Computador": 35 % de $ 1.000.000, para el 30 jun 2027; historial $ 350.000 y $ 0.
+- Cambiar valor a 400.000: 40 % y un registro nuevo arriba en el historial. El mismo valor otra vez:
+  "El valor era el mismo: no se agregó nada al historial." (siguen 3 registros, RN-46).
+- Crear "Computador" otra vez: "Ya tiene un bolsillo activo con ese nombre."; "Emergencias" con
+  150.000: bolsillo sin barra.
+- Editar Emergencias como meta de 100.000: "¡Meta cumplida! 150 %", barra llena.
+- Total reservado en el resumen: 550.000; al archivar Emergencias, 400.000; al reactivarla, 550.000.
+  Los archivados (también "Regalos" de los datos de demostración) muestran su historial y "Reactivar".
+- Vista de celular (375 px) sin desbordamiento.
+
 ## 4. Lo que NO existe todavía
 
-- La pantalla de bolsillos de la interfaz. La API ya ofrece todo lo que necesitan (sección de rutas en `README.md`).
 - Lo aplazado por decisión del proyecto (`REQUISITOS.md`, sección 3): facturas, Gmail,
   presupuestos, recurrentes, tarjetas, renta, notificaciones, auditoría, varias categorías.
-- El repositorio Git no tiene remoto (no se ha subido a GitHub).
-- No hay interfaz (`frontend/`).
 - El repositorio Git no tiene remoto (no se ha subido a GitHub).
 - Los scripts SQL de la "Fase 1" anterior (26 tablas) **no forman parte de este proyecto**.
 
@@ -573,7 +594,9 @@ demostración se borraron al terminar; `financia` no se tocó):
 | 14 | Resumen financiero e indicadores | **Hecho: 23 pruebas; servidor probado** | RF-13, RF-15 |
 | 15 | Datos de prueba y pruebas de CA-01 a CA-15 | **Hecho: 16 pruebas; cargador y servidor probados** | `REQUISITOS.md`, sección 4 |
 
-**Siguiente paso recomendado:** cargar los datos de demostración en `financia` para la sustentación y, si se quiere, subir el repositorio a GitHub. La versión 1 de la API está completa.
+| 16 | Interfaz React: las siete pantallas | **Hecho: 57 pruebas (Vitest); cada pantalla probada en el navegador** | RF-01 a RF-17 |
+
+**Siguiente paso recomendado:** practicar la demostración con los datos de `financia` y, si se quiere, subir el repositorio a GitHub. La versión 1 (API e interfaz) está completa.
 
 ## 6. Decisiones confirmadas por el estudiante (17 y 22 de noviembre de 2026)
 
@@ -677,3 +700,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Interfaz React, paso 4: pantalla de movimientos (historial con filtros, registrar, corregir, anular y reactivar). Probada en el navegador contra la base de pruebas. |
 | 2026-11-22 | Interfaz React, paso 5: pantalla de transferencias con sus cargos. El menú baja de línea en celulares. Probada en el navegador contra la base de pruebas. |
 | 2026-11-22 | Interfaz React, paso 6: pantalla de ajustes de saldo. Probada en el navegador contra la base de pruebas. |
+| 2026-11-22 | Interfaz React, paso 7: pantalla de bolsillos y metas. **La interfaz tiene todas las pantallas.** Probada en el navegador contra la base de pruebas. |

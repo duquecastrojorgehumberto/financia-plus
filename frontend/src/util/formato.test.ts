@@ -8,6 +8,8 @@ import {
   esNegativo,
   formatearDinero,
   formatearFecha,
+  formatearFechaHora,
+  formatearPorcentaje,
 } from "./formato";
 
 describe("formatearDinero", () => {
@@ -86,5 +88,23 @@ describe("dinero escrito por el usuario", () => {
     ["5-", false],
   ])("esDineroValido(%s, permitirNegativo) → %s", (texto, esperado) => {
     expect(esDineroValido(texto, true)).toBe(esperado);
+  });
+});
+
+describe("formatearPorcentaje", () => {
+  it.each([
+    ["35.00", "35 %"],
+    ["33.33", "33,33 %"],
+    ["120.50", "120,5 %"],
+    ["0.00", "0 %"],
+  ])("%s → %s", (valor, esperado) => {
+    expect(formatearPorcentaje(valor)).toBe(esperado);
+  });
+});
+
+describe("formatearFechaHora", () => {
+  it("muestra la hora del computador con dos dígitos", () => {
+    const local = new Date(2026, 10, 5, 9, 7);   // 5 nov 2026, 09:07 en la zona del computador
+    expect(formatearFechaHora(local.toISOString())).toBe("5 nov 2026, 09:07");
   });
 });

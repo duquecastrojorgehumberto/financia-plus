@@ -164,3 +164,31 @@ export interface ResultadoAjuste {
   cuenta: Cuenta;
   ajuste: Movimiento | null;
 }
+
+/** Un bolsillo: reserva virtual, sin cuenta (D-10). Es meta si tiene monto objetivo (D-08). */
+export interface Bolsillo {
+  id_bolsillo: number;
+  nombre: string;
+  descripcion: string | null;
+  es_meta: boolean;
+  monto_objetivo: Dinero | null;
+  fecha_objetivo: string | null;
+  valor_actual: Dinero;                 // el registro más reciente del historial (D-09)
+  progreso_porcentaje: string | null;   // "35.00", calculado por la API (RN-48); null si no es meta
+  activo: boolean;                      // false = archivado (RN-49)
+  creado_en: string;
+}
+
+/** Un cambio de valor del historial (RN-44). */
+export interface ValorBolsillo {
+  valor: Dinero;
+  registrado_en: string;
+}
+
+/** Lo que se envía al crear o editar. Sin monto_objetivo (null): bolsillo genérico. */
+export interface DatosBolsillo {
+  nombre: string;
+  descripcion: string;
+  monto_objetivo: Dinero | null;
+  fecha_objetivo: string | null;
+}

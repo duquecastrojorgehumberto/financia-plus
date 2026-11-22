@@ -7,14 +7,15 @@
 //   /movimientos       Movimientos         con sesión
 //   /transferencias    Transferencias      con sesión
 //   /ajustes           Ajustes             con sesión
+//   /bolsillos         Bolsillos           con sesión
 //
-// La pantalla de bolsillos se agregará aquí,
-// también dentro de RutaProtegida y Plantilla.
+// Cualquier otra dirección lleva al Resumen.
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 
 import { Plantilla } from "./componentes/Plantilla";
 import { RutaProtegida } from "./componentes/RutaProtegida";
 import { Ajustes } from "./paginas/Ajustes";
+import { Bolsillos } from "./paginas/Bolsillos";
 import { Categorias } from "./paginas/Categorias";
 import { Cuentas } from "./paginas/Cuentas";
 import { IniciarSesion } from "./paginas/IniciarSesion";
@@ -39,6 +40,7 @@ export function App() {
               <Route path="/movimientos" element={<Movimientos />} />
               <Route path="/transferencias" element={<Transferencias />} />
               <Route path="/ajustes" element={<Ajustes />} />
+              <Route path="/bolsillos" element={<Bolsillos />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

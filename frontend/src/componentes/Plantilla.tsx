@@ -30,6 +30,7 @@ export function Plantilla() {
           <NavLink to="/movimientos">Movimientos</NavLink>
           <NavLink to="/transferencias">Transferencias</NavLink>
           <NavLink to="/ajustes">Ajustes</NavLink>
+          <NavLink to="/bolsillos">Bolsillos</NavLink>
           <NavLink to="/cuentas">Cuentas</NavLink>
           <NavLink to="/categorias">Categorías</NavLink>
         </nav>
