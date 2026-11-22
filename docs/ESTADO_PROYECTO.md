@@ -272,7 +272,7 @@ Verificado:
   monto rechazado, anular el ajuste devuelve el saldo. Datos de la verificación eliminados.
 - Las pruebas dejan la base de pruebas vacía.
 
-Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
+Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026** (sección 6, P-29 a P-33):
 - **De un ajuste solo se corrigen la fecha y el motivo.** RN-72 permite corregir el monto de
   cualquier movimiento, pero el monto de un ajuste no lo escribe el usuario: sale de un cálculo.
   Si estaba mal, se anula y se hace otro ajuste con el saldo real correcto.
@@ -309,7 +309,7 @@ Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
 | 14 | Resumen financiero e indicadores | Pendiente | RF-13, RF-15 |
 | 15 | Datos de prueba y pruebas de CA-01 a CA-15 | Pendiente | `REQUISITOS.md`, sección 4 |
 
-**Siguiente paso recomendado:** confirmar las cinco decisiones de la sección 3.10 y luego la Tarea 13 (bolsillos).
+**Siguiente paso recomendado:** Tarea 13 (bolsillos), cuando el estudiante la apruebe.
 
 ## 6. Decisiones confirmadas por el estudiante (17 y 22 de noviembre de 2026)
 
@@ -345,6 +345,11 @@ Ya no hay decisiones abiertas.
 | P-26 | ¿Corregir la fecha de una transferencia cambia la de sus cargos? (22/11) | Sí (RN-35). Corregir el monto no toca los cargos. | `TransferenciaServicio.corregir` |
 | P-27 | ¿Se puede agregar un cargo a una transferencia ya registrada? (22/11) | Sí. | `POST /api/transferencias/<id>/cargos` |
 | P-28 | ¿La API propone "Impuestos y comisiones" para los cargos? (22/11) | No: la interfaz la busca por nombre y la preselecciona. | Interfaz (`frontend/`) |
+| P-29 | ¿Qué se corrige de un ajuste? (22/11) | Solo la fecha y el motivo; si el monto estaba mal, se anula y se ajusta de nuevo. Precisa RN-72 para los ajustes. | `AjusteServicio.corregir` |
+| P-30 | ¿La fecha del ajuste es obligatoria? (22/11) | No: por defecto, la de hoy. | `AjusteServicio.ajustar` |
+| P-31 | ¿El saldo real puede ser negativo? (22/11) | Sí. | `AjusteServicio.ajustar` |
+| P-32 | ¿Qué responde un ajuste sin diferencia? (22/11) | 200 con `"ajuste": null`; no se registra nada. | `POST /api/cuentas/<id>/ajustes` |
+| P-33 | ¿Dónde va la ruta del ajuste? (22/11) | Bajo la cuenta: `POST /api/cuentas/<id>/ajustes`. | `app/rutas/ajustes.py` |
 
 D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 4 con dos roles:
 `financia_admin` (migraciones) y `financia_app` (aplicación).
@@ -380,3 +385,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Tarea 11: transferencias con cargos (`TransferenciaServicio`, `VerificadorDeUso`, `TransferenciaConCargos`, rutas `/api/transferencias`); `tests/test_transferencias.py` con CA-02, CA-03 y CA-04 y prueba de mutación de la transacción. Servidor probado. **413 pruebas pasan.** |
 | 2026-11-22 | Confirmadas P-25 a P-28 (reactivar transferencia sin sus cargos, la fecha de los cargos sigue a la transferencia, agregar cargos después, la interfaz preselecciona "Impuestos y comisiones"). |
 | 2026-11-22 | Tarea 12: ajustes de saldo (`AjusteServicio` con `FOR UPDATE`, rutas `/api/cuentas/<id>/ajustes` y `/api/ajustes/<id>`); `tests/test_ajustes.py` con CA-11 y carrera real de RN-55 con prueba de mutación. Servidor probado. **441 pruebas pasan.** |
+| 2026-11-22 | Confirmadas P-29 a P-33 (ajustes: solo fecha y motivo se corrigen, fecha por defecto hoy, saldo real negativo, 200 sin diferencia, ruta bajo la cuenta). |
