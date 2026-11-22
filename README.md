@@ -3,9 +3,10 @@
 Administrador de finanzas personales con **registro manual**. Proyecto del curso Base de
 Datos 1 (UTP, Colombia).
 
-> **Estado: diseño aprobado; migración inicial y pruebas de restricciones escritas y revisadas,
-> pero sin ejecutar.** No hay base de datos creada ni código de aplicación todavía. El detalle
-> está en [`docs/ESTADO_PROYECTO.md`](docs/ESTADO_PROYECTO.md).
+> **Estado: base de datos creada, migrada (`0001` y `0002`) y probada; esqueleto de la API
+> Flask funcionando (`GET /api/salud`). Todavía no hay módulos de negocio (autenticación,
+> cuentas, movimientos...) ni interfaz.** El detalle está en
+> [`docs/ESTADO_PROYECTO.md`](docs/ESTADO_PROYECTO.md).
 
 ## Qué hace (versión 1)
 
@@ -22,7 +23,7 @@ Datos 1 (UTP, Colombia).
 No hay conexión con bancos. Quedan aplazados: facturas, Gmail, tarjetas de crédito,
 presupuestos, recurrentes, informes tributarios, notificaciones y auditoría avanzada.
 
-## Tecnología prevista
+## Tecnología
 
 Python + Flask como API JSON, programada con **orientación a objetos** por capas; PostgreSQL;
 `psycopg` con SQL escrito a mano. El esquema se define con archivos SQL numerados
@@ -36,13 +37,19 @@ financia-plus/
 ├── README.md              Este archivo
 ├── .env.example           Variables de entorno necesarias (valores de ejemplo)
 ├── .gitignore
-├── requirements.txt       Dependencias previstas (sin instalar ni fijar versión)
-├── app/                   API FLASK, orientada a objetos (pendiente)
+├── requirements.txt       Dependencias con las versiones probadas
+├── pytest.ini             Configuración de las pruebas
+├── app/                   API FLASK, orientada a objetos
+│   ├── __init__.py        Fábrica de la aplicación (create_app)
+│   ├── config.py          Lee la configuración de .env
+│   ├── bd.py              Conexión con PostgreSQL y transacciones
+│   ├── errores.py         ErrorNegocio, NoEncontrado y su conversión a JSON
+│   ├── csrf.py            Protección CSRF de las peticiones que modifican datos
 │   ├── entidades/         Clases de datos (una por tabla)
 │   ├── rutas/             Reciben peticiones JSON bajo /api/ y responden JSON
 │   ├── servicios/         Reglas de negocio y transacciones
 │   └── repositorios/      SQL escrito a mano
-├── db/                    BASE DE DATOS (pendiente)
+├── db/                    BASE DE DATOS
 │   ├── migraciones/       Archivos .sql numerados que crean y cambian el esquema
 │   ├── semillas/          Datos iniciales (categorías por defecto) y de prueba
 │   └── consultas/         Consultas de referencia para la sustentación
@@ -61,15 +68,49 @@ financia-plus/
     └── GUIA_CONTINUIDAD_OPUS.md    Instrucciones para continuar el desarrollo
 ```
 
-Cada carpeta de trabajo tiene un `LEEME.md` que explica qué va ahí. Por ahora solo tienen
-contenido `db/migraciones/` (la migración `0001`) y `tests/` (pruebas de restricciones).
+Cada carpeta de trabajo tiene un `LEEME.md` que explica qué va ahí y en qué estado está.
 
 ## Por dónde empezar
 
 1. Lee `docs/ESTADO_PROYECTO.md`.
-2. Sigue las tareas de `docs/GUIA_CONTINUIDAD_OPUS.md`, en orden. Las Tareas 3 y 5 ya están
-   escritas: falta ejecutarlas y corregir lo que aparezca.
+2. Sigue las tareas de `docs/GUIA_CONTINUIDAD_OPUS.md`, en orden.
 
-## Instalación
+## Instalación (Windows)
 
-Pendiente. Se escribirá en la Tarea 1 de la guía, con los pasos reales y probados.
+Requisitos: Windows con PowerShell. El script instala con `winget` lo que falte (Python 3.13,
+Git y PostgreSQL 17), crea el entorno virtual, el archivo `.env` con claves aleatorias, los
+roles `financia_admin` (dueño de las tablas) y `financia_app` (el de la aplicación, sin
+permiso DELETE), las bases `financia` y `financia_pruebas`, aplica las migraciones y ejecuta
+las pruebas. Pide la contraseña del usuario `postgres` sin mostrarla y no la guarda.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\preparar_windows.ps1
+```
+
+Si el entorno virtual deja de funcionar (por ejemplo, al mover la carpeta), se vuelve a crear:
+
+```powershell
+py -3.13 -m venv --clear .venv; .venv\Scripts\python -m pip install -r requirements.txt
+```
+
+## Uso diario
+
+Aplicar migraciones nuevas (base principal y base de pruebas):
+
+```powershell
+.venv\Scripts\python scripts\migrar.py; .venv\Scripts\python scripts\migrar.py --variable DATABASE_URL_PRUEBAS
+```
+
+Ejecutar las pruebas:
+
+```powershell
+.venv\Scripts\python -m pytest tests -q
+```
+
+Arrancar la API (queda en http://127.0.0.1:5000; se detiene con Ctrl+C):
+
+```powershell
+.venv\Scripts\flask --app app run --debug
+```
+
+Comprobar que responde: abrir http://127.0.0.1:5000/api/salud debe mostrar `{"bd": "ok"}`.

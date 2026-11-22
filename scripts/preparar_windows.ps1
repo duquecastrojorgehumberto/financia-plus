@@ -6,9 +6,9 @@
 # Que hace (se puede ejecutar varias veces; lo que ya existe no se repite):
 #   1. Instala con winget lo que falte: Python 3.13, Git y PostgreSQL 17.
 #   2. Crea el entorno virtual .venv e instala requirements.txt.
-#   3. Crea .env, el rol financia_admin y las bases financia y financia_pruebas.
+#   3. Crea .env, los roles financia_admin y financia_app y las bases financia y financia_pruebas.
 #   4. Aplica las migraciones en las dos bases.
-#   5. Ejecuta las pruebas de restricciones.
+#   5. Ejecuta todas las pruebas.
 # Nunca borra nada. Windows pedira permiso de administrador para instalar: responda "Si".
 
 $ErrorActionPreference = "Stop"

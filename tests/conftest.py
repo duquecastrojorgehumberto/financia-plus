@@ -39,21 +39,24 @@ def con():
         conexion.close()
 
 
-@pytest.fixture
-def con_app():
-    """Conexión a la base de PRUEBAS, pero con el rol de la aplicación (financia_app).
+def url_app_en_base_de_pruebas() -> str:
+    """URL del rol de la aplicación (financia_app) apuntando a la base de PRUEBAS.
 
     Usuario y contraseña salen de DATABASE_URL; el nombre de la base, de
-    DATABASE_URL_PRUEBAS. Así se prueban los permisos de la migración 0002
-    sin tocar la base principal. Todo termina en ROLLBACK.
+    DATABASE_URL_PRUEBAS. Así ninguna prueba toca la base principal.
     """
     url_app = os.environ.get("DATABASE_URL")
     url_pruebas = os.environ.get("DATABASE_URL_PRUEBAS")
     if not url_app or not url_pruebas:
-        pytest.skip("Defina DATABASE_URL y DATABASE_URL_PRUEBAS para probar los permisos.")
-
+        pytest.skip("Defina DATABASE_URL y DATABASE_URL_PRUEBAS en .env.")
     base_pruebas = conninfo_to_dict(url_pruebas)["dbname"]
-    conexion = psycopg.connect(make_conninfo(url_app, dbname=base_pruebas))
+    return make_conninfo(url_app, dbname=base_pruebas)
+
+
+@pytest.fixture
+def con_app():
+    """Conexión a la base de PRUEBAS con el rol de la aplicación. Todo termina en ROLLBACK."""
+    conexion = psycopg.connect(url_app_en_base_de_pruebas())
     try:
         yield conexion
     finally:
