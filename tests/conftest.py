@@ -19,6 +19,11 @@ import psycopg
 import pytest
 from dotenv import load_dotenv
 from psycopg.conninfo import conninfo_to_dict, make_conninfo
+from psycopg.rows import dict_row
+
+from app import create_app
+from app.bd import BaseDatos
+from app.config import Config
 
 # Lee .env de la raíz del proyecto (DATABASE_URL_PRUEBAS) sin sobrescribir variables ya definidas.
 load_dotenv(pathlib.Path(__file__).resolve().parent.parent / ".env")
@@ -62,3 +67,52 @@ def con_app():
     finally:
         conexion.rollback()
         conexion.close()
+
+
+# ---------------------------------------------------------------------
+# Para probar servicios y rutas, que sí hacen COMMIT.
+#
+# Se usa UNA conexión que ya tiene una transacción abierta: dentro de ella,
+# el "with con.transaction():" de cada servicio se convierte en un SAVEPOINT,
+# y al final de la prueba se deshace todo con ROLLBACK. Así las pruebas no
+# dejan datos aunque el código de la aplicación confirme sus transacciones.
+# ---------------------------------------------------------------------
+
+class BaseDatosDePrueba(BaseDatos):
+    """Entrega siempre la misma conexión y no la cierra: la prueba hace ROLLBACK al final.
+
+    Es una subclase de BaseDatos que redefine conectar() y liberar(): la
+    aplicación la usa sin saber que es distinta (polimorfismo).
+    """
+
+    def __init__(self, con: psycopg.Connection):
+        self._con = con
+
+    def conectar(self) -> psycopg.Connection:
+        return self._con
+
+    def liberar(self, con: psycopg.Connection) -> None:
+        pass
+
+
+@pytest.fixture
+def con_tx():
+    """Conexión como financia_app a la base de pruebas, con filas como diccionarios
+    y una transacción ya abierta (lo que hagan los servicios serán SAVEPOINT)."""
+    conexion = psycopg.connect(url_app_en_base_de_pruebas(), row_factory=dict_row)
+    conexion.execute("SELECT 1")   # abre la transacción externa
+    try:
+        yield conexion
+    finally:
+        conexion.rollback()
+        conexion.close()
+
+
+@pytest.fixture
+def cliente_api(con_tx):
+    """Cliente HTTP de Flask sobre la aplicación real, usando la conexión con_tx."""
+    config = Config(secret_key=os.environ.get("SECRET_KEY", "clave-de-prueba"),
+                    database_url="no-se-usa")
+    app = create_app(config, bd=BaseDatosDePrueba(con_tx))
+    app.config["TESTING"] = True
+    return app.test_client()

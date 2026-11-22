@@ -8,4 +8,5 @@ Ver `docs/ARQUITECTURA.md`, sección 3.1.
 | --- | --- | --- |
 | `usuario.py` | `Usuario`; `datos_publicos()` devuelve lo que se puede enviar al navegador (sin `clave_hash`). | Hecho (Tarea 7) |
 | `categoria.py` | `Categoria` con `es_subcategoria()`, y `TipoCategoria` (`StrEnum`: INGRESO, EGRESO). | Hecho (Tarea 7) |
-| `cuenta.py`, `movimiento.py`, `bolsillo.py`... | Resto de tablas. | Pendiente |
+| `cuenta.py` | `Cuenta` (la fila), `TipoCuenta` (`StrEnum`) y `CuentaConSaldo` (una `Cuenta` + su saldo calculado, por composición), con `saldo_negativo()` y `datos_publicos()`. | Hecho (Tarea 8) |
+| `movimiento.py`, `bolsillo.py`... | Resto de tablas. | Pendiente |

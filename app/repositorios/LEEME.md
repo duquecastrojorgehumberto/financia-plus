@@ -7,6 +7,7 @@ el constructor; cada método ejecuta una consulta SQL escrita a mano y devuelve 
 | --- | --- | --- |
 | `usuarios.py` | `UsuarioRepositorio`: `insertar`, `obtener`, `obtener_por_correo` | Hecho (Tarea 7) |
 | `categorias.py` | `CategoriaRepositorio`: `insertar`, `listar` | Hecho (Tarea 7); se amplía en la Tarea 9 |
+| `cuentas.py` | `CuentaRepositorio`: la consulta del **saldo calculado**, `obtener_para_actualizar` (`FOR UPDATE`), `tiene_movimientos`, `insertar`, `actualizar`, `cambiar_activa` | Hecho (Tarea 8) |
 
 Reglas:
 - Todo método recibe `id_usuario` y lo usa en el `WHERE`. Única excepción:

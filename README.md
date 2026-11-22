@@ -4,8 +4,8 @@ Administrador de finanzas personales con **registro manual**. Proyecto del curso
 Datos 1 (UTP, Colombia).
 
 > **Estado: base de datos creada, migrada (`0001` y `0002`) y probada; esqueleto de la API
-> Flask funcionando con autenticación (registro, inicio y cierre de sesión). Todavía no hay
-> cuentas, movimientos, bolsillos ni interfaz.** El detalle está en
+> Flask funcionando con autenticación y cuentas (saldo calculado, archivar con saldo 0). Todavía
+> no hay movimientos, bolsillos, resumen ni interfaz.** El detalle está en
 > [`docs/ESTADO_PROYECTO.md`](docs/ESTADO_PROYECTO.md).
 
 ## Qué hace (versión 1)

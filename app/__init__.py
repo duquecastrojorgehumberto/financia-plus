@@ -16,6 +16,7 @@ from app.config import Config
 from app.csrf import registrar_csrf
 from app.errores import registrar_manejadores
 from app.rutas.autenticacion import autenticacion_bp
+from app.rutas.cuentas import cuentas_bp
 from app.rutas.salud import salud_bp
 
 
@@ -47,4 +48,5 @@ def create_app(config: Config | None = None, bd: BaseDatos | None = None) -> Fla
     registrar_manejadores(app)
     app.register_blueprint(salud_bp)
     app.register_blueprint(autenticacion_bp)
+    app.register_blueprint(cuentas_bp)
     return app

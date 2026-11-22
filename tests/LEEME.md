@@ -6,10 +6,13 @@ Pruebas con `pytest` contra una base PostgreSQL de pruebas (`DATABASE_URL_PRUEBA
 
 | Archivo | Qué prueba | Estado |
 | --- | --- | --- |
-| `conftest.py` | Conexiones a la base de pruebas: `con` (rol dueño) y `con_app` (rol `financia_app`). Cada prueba termina en ROLLBACK | Funciona |
+| `conftest.py` | Conexiones a la base de pruebas: `con` (rol dueño), `con_app` (rol `financia_app`), `con_tx` y `cliente_api` (servicios y API: lo que confirman se deshace al final con ROLLBACK) | Funciona |
 | `test_restricciones_bd.py` | Que la base rechaza lo que debe rechazar y acepta lo que debe aceptar (Tarea 5) | Pasa |
 | `test_permisos_bd.py` | Que `financia_app` no puede borrar ni modificar el historial de bolsillos (Tarea 4, D-15) | Pasa |
-| `test_cuentas.py`, `test_movimientos.py`, `test_transferencias.py`, `test_bolsillos.py`, `test_resumen.py` | Servicios y criterios CA-01 a CA-15 | Pendiente |
+| `test_api_base.py` | `/api/salud`, protección CSRF y errores en JSON (Tarea 6) | Pasa |
+| `test_autenticacion.py` | Registro, inicio y cierre de sesión (Tarea 7) | Pasa |
+| `test_cuentas.py` | Saldo calculado, crear, editar, archivar con saldo 0 y bloqueo de la fila (Tarea 8) | Pasa |
+| `test_movimientos.py`, `test_transferencias.py`, `test_bolsillos.py`, `test_resumen.py` | Servicios y criterios CA-01 a CA-15 | Pendiente |
 
 ## Cómo ejecutarlas
 

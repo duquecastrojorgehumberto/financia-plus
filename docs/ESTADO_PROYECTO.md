@@ -1,20 +1,20 @@
 # Estado del proyecto — FINANCIA+
 
-Última actualización: 22 de noviembre de 2026 (Tarea 7). **Actualiza este archivo cada vez que termines una tarea.**
+Última actualización: 22 de noviembre de 2026 (Tarea 8). **Actualiza este archivo cada vez que termines una tarea.**
 
 ## 1. Resumen en una frase
 
 La base de datos está creada, migrada (`0001` y `0002`) y probada; la API Flask funciona con
-autenticación (registro con categorías por defecto, inicio y cierre de sesión) y **189 pruebas
-pasan**. Todavía no hay cuentas, categorías editables, movimientos, bolsillos, resumen ni interfaz.
+autenticación y cuentas (saldo calculado; archivar solo con saldo 0) y **239 pruebas pasan**.
+Todavía no hay categorías editables, movimientos, bolsillos, resumen ni interfaz.
 
 ## 2. Estado por categoría
 
 | Categoría | Qué hay |
 | --- | --- |
-| **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); 189 pruebas. |
+| **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); 239 pruebas. |
 | **Documentado** | Requisitos (17 RF, 10 RNF, 15 criterios), arquitectura, modelo de datos (6 tablas), reglas de negocio, 21 decisiones (todas confirmadas), auditoría del diseño anterior, categorías por defecto, guía de continuidad, instalación y uso diario en `README.md`. |
-| **Pendiente** | Tareas 8 a 15 (sección 5). La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
+| **Pendiente** | Tareas 9 a 15 (sección 5). La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
 
 ## 3. Detalle de lo hecho
 
@@ -95,10 +95,47 @@ Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026*
 - `@requiere_sesion` solo mira la cookie; no consulta en cada petición si el usuario sigue activo.
   `GET /api/sesion` sí lo hace. La versión 1 no tiene forma de desactivar usuarios desde la aplicación.
 
+### 3.6 Cuentas (Tarea 8: RF-02, RF-11)
+
+| Archivo | Qué hace |
+| --- | --- |
+| `app/entidades/cuenta.py` | `Cuenta` (la fila), `TipoCuenta` y `CuentaConSaldo` (cuenta + saldo calculado, por composición; `saldo_negativo()` para el aviso de RN-14). |
+| `app/repositorios/cuentas.py` | Una sola consulta del saldo con `LEFT JOIN` + `SUM(CASE ...)` según la fórmula de `REGLAS_NEGOCIO.md` §2 (solo VIGENTES); `obtener_para_actualizar` con `FOR UPDATE`. |
+| `app/servicios/cuentas.py` | `CuentaServicio`: crear, editar, archivar, reactivar, listar y obtener. Traduce el índice `uq_cuenta_nombre_activa` a un mensaje en español. |
+| `app/rutas/cuentas.py` | `GET`/`POST /api/cuentas` (`?archivadas=1`), `GET`/`PUT /api/cuentas/<id>`, `POST /api/cuentas/<id>/archivar` y `/reactivar`. |
+| `app/rutas/entrada.py` | Nuevo `dinero()`: el dinero llega como texto y se convierte a `Decimal`; un número JSON se rechaza. |
+| `tests/conftest.py` | `BaseDatosDePrueba`, `con_tx` y `cliente_api` pasaron aquí desde `test_autenticacion.py` para compartirlos. |
+
+Verificado:
+- `tests/test_cuentas.py` (50 casos): fórmula completa del saldo (los cinco tipos, anulados,
+  otro usuario), CA-01 (130.000), CA-15 (rechazo con saldo positivo o negativo; con saldo 0 sí),
+  RN-13, RN-06 (cuenta ajena = 404 en las cuatro acciones), nombres únicos entre activas, API.
+- **Bloqueo de la fila (D-20):** con dos conexiones reales, mientras la transacción de archivar
+  no termina, un `INSERT` de movimiento en esa cuenta tiene que esperar (`LockNotAvailable` a
+  los 0,5 s); al terminar, entra sin esperar.
+- Servidor real (contra `financia_pruebas`): crear 201 con saldo `"100000.00"`; archivar con
+  saldo 400 con mensaje claro; editar a saldo 0; archivar 200; listado con y sin archivadas;
+  cuenta inexistente 404. Los datos de esa verificación se eliminaron después.
+- Las pruebas dejan la base de pruebas vacía (0 usuarios, cuentas, categorías y movimientos).
+
+Incidente durante las pruebas (resuelto): la primera versión de la prueba del bloqueo se quedó
+esperando para siempre, porque intentaba borrar sus datos mientras su propia transacción aún
+tenía el `FOR UPDATE`. Se cortó la ejecución, se borraron a mano el usuario y la categoría que
+había dejado en `financia_pruebas`, y la prueba ahora libera el bloqueo antes de limpiar y pone
+un tope de 5 s a la limpieza.
+
+Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
+- **Una cuenta archivada no se edita**: primero se reactiva (como sus movimientos, RN-12).
+- **Hay acción "reactivar"** (RN-12 la menciona; RF-02 no la nombra). Si al reactivar ya existe
+  otra cuenta activa con el mismo nombre, se rechaza y se pide renombrar esa otra.
+- **RN-13 cuenta también los movimientos anulados**: un anulado puede reactivarse (RN-71), así
+  que el saldo inicial queda fijo en cuanto la cuenta tiene cualquier movimiento.
+- **El saldo inicial es opcional al crear** (vale 0, como el valor por defecto de la tabla).
+
 ## 4. Lo que NO existe todavía
 
-- Módulos de cuentas, categorías (crear, renombrar, desactivar), movimientos, transferencias,
-  bolsillos y resumen: sin entidades, repositorios, servicios ni rutas (Tareas 8 a 14).
+- Módulos de categorías (crear, renombrar, desactivar), movimientos, transferencias, ajustes,
+  bolsillos y resumen: sin repositorios, servicios ni rutas completos (Tareas 9 a 14).
 - No hay datos de prueba (`db/semillas/datos_prueba.sql`).
 - No hay interfaz (`frontend/`).
 - El repositorio Git no tiene remoto (no se ha subido a GitHub).
@@ -115,8 +152,8 @@ Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026*
 | 5 | Pruebas de las restricciones | **Hecho: 132 casos pasan** | CA-05, CA-06, CA-08 |
 | 6 | Esqueleto de Flask | **Hecho: `/api/salud` responde; 13 pruebas** | `ARQUITECTURA.md` |
 | 7 | Autenticación y registro | **Hecho: 28 pruebas; servidor probado** | RF-01, RN-26 |
-| 8 | Cuentas (archivar solo con saldo 0) | Pendiente (**esperando aprobación**) | RF-02, RF-11, RN-12, CA-15 |
-| 9 | Categorías | Pendiente | RF-03 |
+| 8 | Cuentas (archivar solo con saldo 0) | **Hecho: 50 pruebas; servidor probado** | RF-02, RF-11, RN-12, CA-15 |
+| 9 | Categorías | Pendiente (**esperando aprobación**) | RF-03 |
 | 10 | Ingresos, egresos, historial, anular y corregir | Pendiente | RF-04, RF-05, RF-14, RF-16 |
 | 11 | Transferencias con cargos | Pendiente | RF-06, RF-07 |
 | 12 | Ajustes de saldo | Pendiente | RF-17 |
@@ -124,7 +161,7 @@ Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026*
 | 14 | Resumen financiero e indicadores | Pendiente | RF-13, RF-15 |
 | 15 | Datos de prueba y pruebas de CA-01 a CA-15 | Pendiente | `REQUISITOS.md`, sección 4 |
 
-**Siguiente paso recomendado:** Tarea 8 (cuentas), cuando el estudiante la apruebe.
+**Siguiente paso recomendado:** confirmar las cuatro decisiones de la sección 3.6 y luego la Tarea 9 (categorías).
 
 ## 6. Decisiones confirmadas por el estudiante (17 y 22 de noviembre de 2026)
 
@@ -168,3 +205,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Tarea 6: esqueleto de Flask (`app/__init__.py`, `config.py`, `bd.py`, `errores.py`, `csrf.py`, `rutas/salud.py`), `pytest.ini`, `tests/test_api_base.py`; `README.md` con instalación y uso diario. Servidor probado. **161 pruebas pasan.** |
 | 2026-11-22 | Tarea 7: autenticación (entidades, repositorios y servicio de usuario y categoría; sesión y `@requiere_sesion`; rutas `/api/registro` y `/api/sesion`); `tests/test_autenticacion.py`. Servidor probado. **189 pruebas pasan.** |
 | 2026-11-22 | Confirmadas P-8 a P-10 (contraseña de 8 caracteres o más, el registro inicia sesión, `@requiere_sesion` solo revisa la cookie). |
+| 2026-11-22 | Tarea 8: cuentas (entidad `Cuenta`/`CuentaConSaldo`, `CuentaRepositorio` con el saldo calculado, `CuentaServicio`, rutas `/api/cuentas`); `tests/test_cuentas.py` con prueba real del bloqueo `FOR UPDATE`. Servidor probado. **239 pruebas pasan.** |
