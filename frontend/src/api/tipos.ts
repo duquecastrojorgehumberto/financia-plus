@@ -77,3 +77,19 @@ export interface DatosCuenta {
   tipo: TipoCuenta;
   saldo_inicial: Dinero;
 }
+
+/** RN-20. */
+export type TipoCategoria = "INGRESO" | "EGRESO";
+
+export interface Categoria {
+  id_categoria: number;
+  id_padre: number | null;   // null = categoría raíz
+  nombre: string;
+  tipo: TipoCategoria;
+  activa: boolean;           // false = desactivada (RN-25)
+}
+
+/** Una categoría raíz con sus subcategorías: el árbol tiene solo dos niveles (RN-21). */
+export interface RamaCategoria extends Categoria {
+  subcategorias: Categoria[];
+}

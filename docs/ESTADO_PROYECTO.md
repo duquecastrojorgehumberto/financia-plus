@@ -16,7 +16,7 @@ para la sustentación. Lo único que falta es la interfaz React, que se hace en 
 | --- | --- |
 | **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); ingresos, egresos e historial (Tarea 10); transferencias con cargos (Tarea 11); ajustes de saldo (Tarea 12); bolsillos (Tarea 13); resumen (Tarea 14); datos de prueba (Tarea 15); 522 pruebas. |
 | **Documentado** | Requisitos (17 RF, 10 RNF, 15 criterios), arquitectura, modelo de datos (6 tablas), reglas de negocio, 21 decisiones (todas confirmadas), auditoría del diseño anterior, categorías por defecto, guía de continuidad, instalación y uso diario en `README.md`. |
-| **Pendiente** | Ninguna tarea de la guía. Interfaz: faltan las pantallas de categorías, movimientos, transferencias, ajustes y bolsillos. | La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
+| **Pendiente** | Ninguna tarea de la guía. Interfaz: faltan las pantallas de movimientos, transferencias, ajustes y bolsillos. | La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
 
 ## 3. Detalle de lo hecho
 
@@ -432,10 +432,34 @@ de demostración, que después se borraron: la base de pruebas quedó vacía; `f
 - Con un egreso de 25.000 en Daviplata: saldo −$ 25.000 en rojo y aviso de RN-14.
 - Vista de celular (375 px) sin desbordamiento.
 
+### 3.16 Interfaz React, paso 3: categorías
+
+| Pieza | Qué hace |
+| --- | --- |
+| `frontend/src/paginas/Categorias.tsx` | Pestañas Egresos / Ingresos; cada raíz en una tarjeta con sus subcategorías. Crear raíz y subcategoría, renombrar, desactivar y reactivar; casilla para ver las desactivadas. |
+| `frontend/src/api/categorias.ts` | Una función por ruta de `/api/categorias`. La subcategoría se crea sin tipo: lo toma del padre (RN-23). |
+
+Solo se ofrece cambiar el **nombre** (RN-22). Antes de desactivar una raíz con subcategorías
+activas, la pantalla pide confirmación, porque al reactivar la raíz las subcategorías no vuelven
+solas (así funciona `CategoriaServicio.reactivar`).
+
+Verificado en el navegador con Ana, contra una API conectada a `financia_pruebas` (los datos de
+demostración se borraron al terminar; `financia` no se tocó):
+- Egresos muestra las 10 raíces con sus subcategorías; Ingresos, las 4 de ingreso.
+- Crear "Mascotas": aparece. Crear "alimentación": "Ya existe una categoría activa con ese nombre en
+  el mismo nivel." (RN-24, sin importar mayúsculas). Subcategoría "Veterinario": agregada;
+  "Mercado" repetida en Alimentación: rechazada.
+- Desactivar Alimentación: pide confirmación (3 subcategorías); con "No" no cambia nada; con "Sí",
+  aviso "Se desactivó "Alimentación" y 3 subcategorías".
+- Reactivar Mercado antes que su padre: "Primero reactive la categoría padre.". Reactivar
+  Alimentación: sus subcategorías siguen desactivadas, y Mercado se reactiva después.
+- Renombrar a "Salud": rechazado; a "Mascotas y animales": guardado. Luego la "Mascotas"
+  desactivada de los datos de demostración se pudo reactivar.
+- Vista de celular (375 px) sin desbordamiento.
+
 ## 4. Lo que NO existe todavía
 
-- Las demás pantallas de la interfaz: categorías, movimientos, transferencias, ajustes y
-  bolsillos. La API ya ofrece todo lo que necesitan (sección de rutas en `README.md`).
+- Las demás pantallas de la interfaz: movimientos, transferencias, ajustes y bolsillos. La API ya ofrece todo lo que necesitan (sección de rutas en `README.md`).
 - Lo aplazado por decisión del proyecto (`REQUISITOS.md`, sección 3): facturas, Gmail,
   presupuestos, recurrentes, tarjetas, renta, notificaciones, auditoría, varias categorías.
 - El repositorio Git no tiene remoto (no se ha subido a GitHub).
@@ -563,3 +587,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Confirmadas P-45 a P-48 (datos de prueba). No quedan decisiones abiertas. |
 | 2026-11-22 | Interfaz React, paso 1 (`frontend/`): Vite + React + TypeScript, cliente de la API, sesión (registro, inicio y cierre) y pantalla de resumen. Probada en el navegador contra la API real. |
 | 2026-11-22 | Interfaz React, paso 2: pantalla de cuentas (crear, editar, archivar, reactivar) y campo de dinero reutilizable. Probada en el navegador contra la base de pruebas. |
+| 2026-11-22 | Interfaz React, paso 3: pantalla de categorías (árbol por tipo, crear, renombrar, desactivar y reactivar). Probada en el navegador contra la base de pruebas. |

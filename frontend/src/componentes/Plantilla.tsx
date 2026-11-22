@@ -28,6 +28,7 @@ export function Plantilla() {
             Resumen
           </NavLink>
           <NavLink to="/cuentas">Cuentas</NavLink>
+          <NavLink to="/categorias">Categorías</NavLink>
         </nav>
         <div className="usuario">
           <span>{usuario?.nombre}</span>

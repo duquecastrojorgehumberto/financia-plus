@@ -7,7 +7,7 @@ Datos 1 (UTP, Colombia).
 > Flask funcionando con autenticación, cuentas (saldo calculado, archivar con saldo 0),
 > categorías, ingresos, egresos, historial, transferencias con cargos, ajustes de saldo,
 > bolsillos con metas y resumen financiero: **las 15 tareas de la guía están terminadas**, con
-> 522 pruebas automáticas. La interfaz React (`frontend/`) ya tiene sesión, resumen y cuentas;
+> 522 pruebas automáticas. La interfaz React (`frontend/`) ya tiene sesión, resumen, cuentas y categorías;
 > faltan las demás pantallas.** El detalle está en
 > [`docs/ESTADO_PROYECTO.md`](docs/ESTADO_PROYECTO.md).
 
@@ -57,7 +57,7 @@ financia-plus/
 │   ├── migraciones/       Archivos .sql numerados que crean y cambian el esquema
 │   ├── semillas/          Datos iniciales (categorías por defecto) y de prueba
 │   └── consultas/         Consultas de referencia para la sustentación
-├── frontend/              INTERFAZ React + Vite + TypeScript (sesión, resumen y cuentas; ver frontend/LEEME.md)
+├── frontend/              INTERFAZ React + Vite + TypeScript (sesión, resumen, cuentas y categorías; ver frontend/LEEME.md)
 ├── config/                Configuración por entorno (pendiente)
 ├── scripts/               Utilidades (aplicar migraciones, cargar datos)
 ├── tests/                 Pruebas automáticas
