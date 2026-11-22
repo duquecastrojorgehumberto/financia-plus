@@ -89,7 +89,7 @@ Verificado:
   cerrar 200, ver sin sesión 401, clave errada 401, iniciar sesión 200, ver sesión 200, y 34
   categorías en la base. El usuario de esa verificación se eliminó después con `financia_admin`.
 
-Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
+Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026** (sección 6, P-8 a P-10):
 - La contraseña debe tener **al menos 8 caracteres** (los documentos no fijaban un mínimo).
 - **El registro deja la sesión iniciada** (no hay que iniciar sesión justo después de registrarse).
 - `@requiere_sesion` solo mira la cookie; no consulta en cada petición si el usuario sigue activo.
@@ -124,9 +124,9 @@ Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
 | 14 | Resumen financiero e indicadores | Pendiente | RF-13, RF-15 |
 | 15 | Datos de prueba y pruebas de CA-01 a CA-15 | Pendiente | `REQUISITOS.md`, sección 4 |
 
-**Siguiente paso recomendado:** confirmar las tres decisiones de la sección 3.5 y luego la Tarea 8 (cuentas).
+**Siguiente paso recomendado:** Tarea 8 (cuentas), cuando el estudiante la apruebe.
 
-## 6. Decisiones confirmadas por el estudiante (17 de noviembre de 2026)
+## 6. Decisiones confirmadas por el estudiante (17 y 22 de noviembre de 2026)
 
 Ya no hay decisiones abiertas.
 
@@ -139,6 +139,9 @@ Ya no hay decisiones abiertas.
 | P-5 | ¿Qué pasa al archivar? | **Cambiada:** una cuenta solo se archiva si su saldo calculado es 0 (lo valida el servicio). Los bolsillos archivados dejan de sumar en el total reservado. | D-20, RN-12, RN-49, RN-60, CA-15 |
 | P-6 | ¿Flask, psycopg 3, Jinja2 y script propio de migraciones? | Sí; el 21/11 Jinja2 se reemplazó por una API JSON con interfaz React (D-21). | D-18, D-19, D-21 |
 | P-7 | ¿Tipos de cuenta? | EFECTIVO, AHORROS, CORRIENTE, BILLETERA_DIGITAL, OTRA. | D-16 |
+| P-8 | ¿Longitud mínima de la contraseña? (22/11) | 8 caracteres. | `LONGITUD_MINIMA_CLAVE` en `app/servicios/autenticacion.py` |
+| P-9 | ¿El registro deja la sesión iniciada? (22/11) | Sí. | `POST /api/registro` |
+| P-10 | ¿`@requiere_sesion` revisa en cada petición si el usuario sigue activo? (22/11) | No: solo la cookie. `GET /api/sesion` sí lo revisa. | `app/sesion.py` |
 
 D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 4 con dos roles:
 `financia_admin` (migraciones) y `financia_app` (aplicación).
@@ -164,3 +167,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Tarea 4: migración `0002_roles_y_permisos.sql` aplicada en las dos bases; `preparar_bd.py` crea `financia_app`; `tests/test_permisos_bd.py`. **148 pruebas pasan.** |
 | 2026-11-22 | Tarea 6: esqueleto de Flask (`app/__init__.py`, `config.py`, `bd.py`, `errores.py`, `csrf.py`, `rutas/salud.py`), `pytest.ini`, `tests/test_api_base.py`; `README.md` con instalación y uso diario. Servidor probado. **161 pruebas pasan.** |
 | 2026-11-22 | Tarea 7: autenticación (entidades, repositorios y servicio de usuario y categoría; sesión y `@requiere_sesion`; rutas `/api/registro` y `/api/sesion`); `tests/test_autenticacion.py`. Servidor probado. **189 pruebas pasan.** |
+| 2026-11-22 | Confirmadas P-8 a P-10 (contraseña de 8 caracteres o más, el registro inicia sesión, `@requiere_sesion` solo revisa la cookie). |
