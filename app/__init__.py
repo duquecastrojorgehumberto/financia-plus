@@ -15,13 +15,21 @@ from app.bd import BaseDatos, cerrar_conexion
 from app.config import Config
 from app.csrf import registrar_csrf
 from app.errores import registrar_manejadores
+from app.rutas.autenticacion import autenticacion_bp
 from app.rutas.salud import salud_bp
 
 
-def create_app(config: Config | None = None) -> Flask:
-    """Crea la aplicación. Sin argumento, lee la configuración del entorno (.env)."""
+def create_app(config: Config | None = None, bd: BaseDatos | None = None) -> Flask:
+    """Crea la aplicación.
+
+    Sin argumentos, lee la configuración del entorno (.env) y se conecta a la
+    base de DATABASE_URL. Las pruebas pueden pasar su propia configuración y su
+    propio objeto BaseDatos.
+    """
     if config is None:
         config = Config.desde_entorno()
+    if bd is None:
+        bd = BaseDatos(config.database_url)
 
     app = Flask(__name__)
     app.config.update(
@@ -32,10 +40,11 @@ def create_app(config: Config | None = None) -> Flask:
     app.json.ensure_ascii = False         # respuestas JSON con tildes legibles
 
     # Un solo objeto BaseDatos para toda la aplicación; cada petición abre su conexión.
-    app.extensions["financia_bd"] = BaseDatos(config.database_url)
+    app.extensions["financia_bd"] = bd
     app.teardown_appcontext(cerrar_conexion)
 
     registrar_csrf(app)
     registrar_manejadores(app)
     app.register_blueprint(salud_bp)
+    app.register_blueprint(autenticacion_bp)
     return app

@@ -39,6 +39,15 @@ class BaseDatos:
         """True si la base responde a una consulta mínima."""
         return con.execute("SELECT 1 AS uno").fetchone()["uno"] == 1
 
+    def liberar(self, con: psycopg.Connection) -> None:
+        """Devuelve la conexión al terminar la petición: aquí, la cierra.
+
+        Las pruebas usan una subclase que redefine conectar() y liberar() para
+        trabajar siempre con la misma conexión y deshacer todo al final
+        (tests/test_autenticacion.py). Es el mismo método con otro comportamiento.
+        """
+        con.close()
+
 
 def obtener_conexion() -> psycopg.Connection:
     """Devuelve la conexión de la petición actual; la abre si todavía no existe."""
@@ -52,4 +61,4 @@ def cerrar_conexion(_error=None) -> None:
     """Cierra la conexión de la petición, si se abrió. Flask la llama al final de cada petición."""
     con = g.pop("con", None)
     if con is not None:
-        con.close()
+        current_app.extensions["financia_bd"].liberar(con)

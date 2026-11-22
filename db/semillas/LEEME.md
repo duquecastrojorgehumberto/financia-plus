@@ -1,12 +1,13 @@
 # db/semillas/
 
-**Estado: vacío. No se ha escrito ningún archivo de datos.**
-
-Aquí irán los datos iniciales y los datos de prueba (Tareas 7 y 15 de la guía).
+**Estado: sin archivos todavía.** Las categorías por defecto ya se copian al registrarse
+(Tarea 7), desde `app/servicios/categorias_por_defecto.py`. Aquí irán los datos de prueba (Tarea 15).
 
 ## Categorías por defecto (RN-26)
 
-Al registrarse, cada usuario recibe una copia de esta lista. Es una propuesta de partida; el
+Al registrarse, cada usuario recibe una copia de esta lista, en la misma transacción que crea
+al usuario. **Implementado en `app/servicios/categorias_por_defecto.py`: si cambia la lista, hay
+que cambiarla en los dos lugares.** Es una propuesta de partida; el
 usuario puede renombrar, desactivar o agregar.
 
 ### Ingresos

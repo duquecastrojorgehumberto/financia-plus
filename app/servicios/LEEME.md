@@ -1,14 +1,18 @@
 # app/servicios/
 
-**Estado: vacío.**
+Una clase por módulo. Aquí viven las reglas de `docs/REGLAS_NEGOCIO.md` marcadas como
+"Servicio". Regla de oro: **una acción del usuario = un método = una transacción**
+(`with self.con.transaction():`).
 
-Un archivo por módulo. Aquí viven las reglas de `docs/REGLAS_NEGOCIO.md` marcadas como
-"Servicio". Regla de oro: **una acción del usuario = una función = una transacción.**
+| Archivo | Contenido | Estado |
+| --- | --- | --- |
+| `autenticacion.py` | `AutenticacionServicio`: `registrar` (usuario + categorías en una transacción), `iniciar_sesion`, `obtener_usuario_activo` | Hecho (Tarea 7) |
+| `categorias_por_defecto.py` | La lista de categorías que recibe cada usuario nuevo (RN-26) | Hecho (Tarea 7) |
 
 Operaciones que exigen transacción explícita:
+- Registro de usuario con sus categorías por defecto (RN-26). **Hecho.**
 - Transferencia con sus cargos (RN-37) y su anulación (RN-38).
 - Crear bolsillo con su primer valor (RN-45).
 - Ajuste de saldo, bloqueando la fila de la cuenta (RN-55).
-- Registro de usuario con sus categorías por defecto (RN-26).
 
-No va aquí: HTML, objetos de Flask ni SQL.
+No va aquí: objetos de Flask (request, session), JSON ni SQL.

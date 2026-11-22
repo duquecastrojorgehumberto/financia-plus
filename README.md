@@ -4,8 +4,8 @@ Administrador de finanzas personales con **registro manual**. Proyecto del curso
 Datos 1 (UTP, Colombia).
 
 > **Estado: base de datos creada, migrada (`0001` y `0002`) y probada; esqueleto de la API
-> Flask funcionando (`GET /api/salud`). Todavía no hay módulos de negocio (autenticación,
-> cuentas, movimientos...) ni interfaz.** El detalle está en
+> Flask funcionando con autenticación (registro, inicio y cierre de sesión). Todavía no hay
+> cuentas, movimientos, bolsillos ni interfaz.** El detalle está en
 > [`docs/ESTADO_PROYECTO.md`](docs/ESTADO_PROYECTO.md).
 
 ## Qué hace (versión 1)
@@ -45,6 +45,7 @@ financia-plus/
 │   ├── bd.py              Conexión con PostgreSQL y transacciones
 │   ├── errores.py         ErrorNegocio, NoEncontrado y su conversión a JSON
 │   ├── csrf.py            Protección CSRF de las peticiones que modifican datos
+│   ├── sesion.py          Sesión del usuario y decorador @requiere_sesion
 │   ├── entidades/         Clases de datos (una por tabla)
 │   ├── rutas/             Reciben peticiones JSON bajo /api/ y responden JSON
 │   ├── servicios/         Reglas de negocio y transacciones

@@ -1,20 +1,20 @@
 # Estado del proyecto — FINANCIA+
 
-Última actualización: 22 de noviembre de 2026. **Actualiza este archivo cada vez que termines una tarea.**
+Última actualización: 22 de noviembre de 2026 (Tarea 7). **Actualiza este archivo cada vez que termines una tarea.**
 
 ## 1. Resumen en una frase
 
-La base de datos está creada, migrada (`0001` y `0002`) y probada; el esqueleto de la API
-Flask funciona (`GET /api/salud` responde `{"bd": "ok"}`) y **161 pruebas pasan**. Todavía no
-hay módulos de negocio (autenticación, cuentas, movimientos...) ni interfaz.
+La base de datos está creada, migrada (`0001` y `0002`) y probada; la API Flask funciona con
+autenticación (registro con categorías por defecto, inicio y cierre de sesión) y **189 pruebas
+pasan**. Todavía no hay cuentas, categorías editables, movimientos, bolsillos, resumen ni interfaz.
 
 ## 2. Estado por categoría
 
 | Categoría | Qué hay |
 | --- | --- |
-| **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); 161 pruebas. |
+| **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); 189 pruebas. |
 | **Documentado** | Requisitos (17 RF, 10 RNF, 15 criterios), arquitectura, modelo de datos (6 tablas), reglas de negocio, 21 decisiones (todas confirmadas), auditoría del diseño anterior, categorías por defecto, guía de continuidad, instalación y uso diario en `README.md`. |
-| **Pendiente** | Tareas 7 a 15 (sección 5). La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
+| **Pendiente** | Tareas 8 a 15 (sección 5). La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
 
 ## 3. Detalle de lo hecho
 
@@ -69,11 +69,36 @@ Verificado: `tests/test_api_base.py` (13 casos) y el servidor real (`flask --app
 respondió `200 {"bd":"ok"}` contra la base `financia` con el rol `financia_app`, y `415` a un
 POST sin JSON.
 
+### 3.5 Autenticación (Tarea 7, RF-01)
+
+| Archivo | Qué hace |
+| --- | --- |
+| `app/entidades/usuario.py`, `categoria.py` | `Usuario` (con `datos_publicos()`, sin el hash), `Categoria` y `TipoCategoria` (`StrEnum`). |
+| `app/repositorios/usuarios.py`, `categorias.py` | `UsuarioRepositorio` y `CategoriaRepositorio`, SQL parametrizado. |
+| `app/servicios/autenticacion.py` | `AutenticacionServicio`: `registrar` (usuario + 34 categorías en **una** transacción, RN-26), `iniciar_sesion`, `obtener_usuario_activo`. Hash con Werkzeug (RN-02); correo normalizado (RN-01). |
+| `app/servicios/categorias_por_defecto.py` | La lista de `db/semillas/LEEME.md` (13 categorías y 21 subcategorías). |
+| `app/sesion.py` | `iniciar`, `cerrar` y el decorador `@requiere_sesion`, que entrega `id_usuario` a la ruta (RN-05). |
+| `app/rutas/autenticacion.py` | `POST /api/registro` (201, deja la sesión iniciada); `POST /api/sesion` (iniciar); `GET /api/sesion` (quién está); `DELETE /api/sesion` (cerrar). |
+| `app/errores.py` | Nueva clase `NoAutenticado(ErrorNegocio)`: 401. |
+| `app/bd.py` | Nuevo método `BaseDatos.liberar()`; las pruebas lo redefinen para deshacer todo al final. |
+
+Verificado:
+- `tests/test_autenticacion.py` (28 casos). Las pruebas no dejan datos: la base de pruebas
+  tenía 0 usuarios y 0 categorías antes y después de ejecutarlas.
+- Servidor real (contra `financia_pruebas`, rol `financia_app`, cookies reales): registro 201,
+  cerrar 200, ver sin sesión 401, clave errada 401, iniciar sesión 200, ver sesión 200, y 34
+  categorías en la base. El usuario de esa verificación se eliminó después con `financia_admin`.
+
+Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
+- La contraseña debe tener **al menos 8 caracteres** (los documentos no fijaban un mínimo).
+- **El registro deja la sesión iniciada** (no hay que iniciar sesión justo después de registrarse).
+- `@requiere_sesion` solo mira la cookie; no consulta en cada petición si el usuario sigue activo.
+  `GET /api/sesion` sí lo hace. La versión 1 no tiene forma de desactivar usuarios desde la aplicación.
+
 ## 4. Lo que NO existe todavía
 
-- Ningún módulo de negocio: no hay entidades, repositorios, servicios ni rutas de autenticación,
-  cuentas, categorías, movimientos, transferencias, bolsillos ni resumen.
-- No hay sesión de usuario ni decorador "requiere sesión" (Tarea 7).
+- Módulos de cuentas, categorías (crear, renombrar, desactivar), movimientos, transferencias,
+  bolsillos y resumen: sin entidades, repositorios, servicios ni rutas (Tareas 8 a 14).
 - No hay datos de prueba (`db/semillas/datos_prueba.sql`).
 - No hay interfaz (`frontend/`).
 - El repositorio Git no tiene remoto (no se ha subido a GitHub).
@@ -89,8 +114,8 @@ POST sin JSON.
 | 4 | Migración `0002`: roles y permisos | **Hecho: aplicada en las dos bases; 16 pruebas** | D-15 |
 | 5 | Pruebas de las restricciones | **Hecho: 132 casos pasan** | CA-05, CA-06, CA-08 |
 | 6 | Esqueleto de Flask | **Hecho: `/api/salud` responde; 13 pruebas** | `ARQUITECTURA.md` |
-| 7 | Autenticación y registro | Pendiente (**esperando aprobación**) | RF-01, RN-26 |
-| 8 | Cuentas (archivar solo con saldo 0) | Pendiente | RF-02, RF-11, RN-12, CA-15 |
+| 7 | Autenticación y registro | **Hecho: 28 pruebas; servidor probado** | RF-01, RN-26 |
+| 8 | Cuentas (archivar solo con saldo 0) | Pendiente (**esperando aprobación**) | RF-02, RF-11, RN-12, CA-15 |
 | 9 | Categorías | Pendiente | RF-03 |
 | 10 | Ingresos, egresos, historial, anular y corregir | Pendiente | RF-04, RF-05, RF-14, RF-16 |
 | 11 | Transferencias con cargos | Pendiente | RF-06, RF-07 |
@@ -99,7 +124,7 @@ POST sin JSON.
 | 14 | Resumen financiero e indicadores | Pendiente | RF-13, RF-15 |
 | 15 | Datos de prueba y pruebas de CA-01 a CA-15 | Pendiente | `REQUISITOS.md`, sección 4 |
 
-**Siguiente paso recomendado:** Tarea 7 (autenticación), cuando el estudiante la apruebe.
+**Siguiente paso recomendado:** confirmar las tres decisiones de la sección 3.5 y luego la Tarea 8 (cuentas).
 
 ## 6. Decisiones confirmadas por el estudiante (17 de noviembre de 2026)
 
@@ -138,3 +163,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Proyecto movido a `C:\Users\thedr\proyectos\financia-plus`; `.venv` recreado (132 pruebas pasan). Repositorio Git inicializado (rama `main`); eliminadas `app/plantillas/` y `app/estaticos/`. |
 | 2026-11-22 | Tarea 4: migración `0002_roles_y_permisos.sql` aplicada en las dos bases; `preparar_bd.py` crea `financia_app`; `tests/test_permisos_bd.py`. **148 pruebas pasan.** |
 | 2026-11-22 | Tarea 6: esqueleto de Flask (`app/__init__.py`, `config.py`, `bd.py`, `errores.py`, `csrf.py`, `rutas/salud.py`), `pytest.ini`, `tests/test_api_base.py`; `README.md` con instalación y uso diario. Servidor probado. **161 pruebas pasan.** |
+| 2026-11-22 | Tarea 7: autenticación (entidades, repositorios y servicio de usuario y categoría; sesión y `@requiere_sesion`; rutas `/api/registro` y `/api/sesion`); `tests/test_autenticacion.py`. Servidor probado. **189 pruebas pasan.** |
