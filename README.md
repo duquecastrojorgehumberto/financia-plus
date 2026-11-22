@@ -7,7 +7,7 @@ Datos 1 (UTP, Colombia).
 > Flask funcionando con autenticación, cuentas (saldo calculado, archivar con saldo 0),
 > categorías, ingresos, egresos, historial, transferencias con cargos, ajustes de saldo,
 > bolsillos con metas y resumen financiero: **las 15 tareas de la guía están terminadas**, con
-> 522 pruebas automáticas. La interfaz React (`frontend/`) tiene todas las pantallas,
+> 548 pruebas automáticas. La interfaz React (`frontend/`) tiene todas las pantallas,
 > probadas en el navegador contra la API.** El detalle está en
 > [`docs/ESTADO_PROYECTO.md`](docs/ESTADO_PROYECTO.md).
 
@@ -152,6 +152,7 @@ sesión. El dinero viaja como texto (`"150000.50"`) y las fechas como `"AAAA-MM-
 | Ingresos, egresos e historial | `/api/movimientos`, `/api/movimientos/<id>`, `…/anular`, `…/reactivar` | `app/rutas/movimientos.py` |
 | Transferencias | `/api/transferencias`, `/api/transferencias/<id>`, `…/anular`, `…/reactivar`, `…/cargos` | `app/rutas/transferencias.py` |
 | Bolsillos | `/api/bolsillos`, `/api/bolsillos/<id>`, `…/valor`, `…/archivar`, `…/reactivar` | `app/rutas/bolsillos.py` |
-| Resumen | `GET /api/resumen?desde=&hasta=` | `app/rutas/resumen.py` |
+| Resumen | `GET /api/resumen?desde=&hasta=` (con el porcentaje de cada categoría) | `app/rutas/resumen.py` |
+| Resumen mensual | `GET /api/resumen/mensual?meses=6` (ingresos y egresos de los últimos meses) | `app/rutas/resumen.py` |
 
 Cada archivo de rutas explica al inicio sus rutas, qué recibe y qué responde.

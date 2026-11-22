@@ -9,11 +9,19 @@
         desde, hasta, ingresos, egresos, balance,
         ajustes: {aumentos, disminuciones},                 aparte (RN-53)
         categorias: {
-          ingresos: [{id_categoria, nombre, total, directo, subcategorias: [...]}, ...],
+          ingresos: [{id_categoria, nombre, total, porcentaje, directo, porcentaje_directo,
+                      subcategorias: [{id_categoria, nombre, total, porcentaje}, ...]}, ...],
           egresos:  [...]                                   cada raíz con sus subcategorías (RN-27)
         }
       }
     }
+    porcentaje: "35.5" (un decimal), sobre el total del tipo (todas las raíces de ingreso, o de egreso).
+
+    GET /api/resumen/mensual                         -> los últimos 6 meses, hasta el actual
+    GET /api/resumen/mensual?meses=12                -> de 1 a 24 meses
+
+    200 {"meses": [{mes: "2026-06", ingresos, egresos, balance}, ...]}
+        del más antiguo al más reciente; los meses sin movimientos vienen con "0.00".
 
 Los indicadores son del momento actual (no dependen del periodo). Todo el dinero
 viaja como texto ("130000.00").
@@ -36,3 +44,11 @@ def resumen(id_usuario):
     periodo = servicio.periodo(id_usuario, entrada.parametro_fecha("desde"), entrada.parametro_fecha("hasta"))
     return jsonify(indicadores=servicio.indicadores(id_usuario).datos_publicos(),
                    periodo=periodo.datos_publicos())
+
+
+@resumen_bp.get("/mensual")
+@requiere_sesion
+def mensual(id_usuario):
+    meses = entrada.parametro_entero("meses")
+    totales = ResumenServicio(obtener_conexion()).mensual(id_usuario, meses if meses is not None else 6)
+    return jsonify(meses=[t.datos_publicos() for t in totales])

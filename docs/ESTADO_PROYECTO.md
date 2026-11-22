@@ -7,14 +7,14 @@
 La base de datos está creada, migrada (`0001` y `0002`) y probada; la API Flask funciona con
 autenticación, cuentas (saldo calculado; archivar solo con saldo 0), categorías, ingresos, egresos,
 historial, transferencias con cargos, ajustes de saldo, bolsillos con metas y resumen financiero.
-**Las 15 tareas de la guía están terminadas y 522 pruebas pasan.** Hay datos de demostración
+**Las 15 tareas de la guía están terminadas y 548 pruebas pasan.** Hay datos de demostración
 para la sustentación. Lo único que falta es la interfaz React, que se hace en otra asignatura.
 
 ## 2. Estado por categoría
 
 | Categoría | Qué hay |
 | --- | --- |
-| **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); ingresos, egresos e historial (Tarea 10); transferencias con cargos (Tarea 11); ajustes de saldo (Tarea 12); bolsillos (Tarea 13); resumen (Tarea 14); datos de prueba (Tarea 15); 522 pruebas. |
+| **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); ingresos, egresos e historial (Tarea 10); transferencias con cargos (Tarea 11); ajustes de saldo (Tarea 12); bolsillos (Tarea 13); resumen (Tarea 14); datos de prueba (Tarea 15); datos para gráficos en el resumen; 548 pruebas. |
 | **Documentado** | Requisitos (17 RF, 10 RNF, 15 criterios), arquitectura, modelo de datos (6 tablas), reglas de negocio, 21 decisiones (todas confirmadas), auditoría del diseño anterior, categorías por defecto, guía de continuidad, instalación y uso diario en `README.md`. |
 | **Pendiente** | Ninguna tarea de la guía. La interfaz tiene todas las pantallas (secciones 3.14 a 3.20). | La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
 
@@ -567,6 +567,31 @@ demostración se borraron al terminar; `financia` no se tocó):
   Los archivados (también "Regalos" de los datos de demostración) muestran su historial y "Reactivar".
 - Vista de celular (375 px) sin desbordamiento.
 
+### 3.21 Gráficos del resumen, etapa 1: datos en la API
+
+Pedido del estudiante (22/11/2026): gráficos en el resumen, en tres etapas (1: API; 2: galería de
+variantes para elegir; 3: integrar las elegidas). Esta es la etapa 1.
+
+| Pieza | Qué hace |
+| --- | --- |
+| `app/servicios/resumen.py` | `porcentaje(parte, total)`: con `Decimal`, redondeado a un decimal con la mitad hacia arriba (`ROUND_HALF_UP`); 0 si el total es 0. Cada categoría raíz trae `porcentaje` y `porcentaje_directo`, y cada subcategoría su `porcentaje`, todos sobre el total de su tipo. Nuevo `TotalMes` y `ResumenServicio.mensual(id_usuario, meses, referencia)`: valida de 1 a 24 meses. |
+| `app/repositorios/resumen.py` | `totales_mensuales`: `generate_series` + `date_trunc` arman la lista de meses; `LEFT JOIN` con los filtros en el `ON` conserva los meses sin movimientos (con `COALESCE` a 0); el mes se compara con un rango de fechas para poder usar el índice; `SUM(...) FILTER (WHERE tipo = ...)` separa ingresos y egresos. Solo `VIGENTE`, solo `INGRESO` y `EGRESO` (RN-64, RN-53). |
+| `app/rutas/resumen.py` | `GET /api/resumen/mensual?meses=6` → `{"meses": [{mes: "2026-06", ingresos, egresos, balance}, ...]}`. |
+| `tests/test_resumen.py` | 26 pruebas nuevas (49 en el archivo): porcentajes (redondeo, total cero, subcategorías sobre el total del tipo, ingresos y egresos por separado), meses vacíos, límites de cada mes, anulados, transferencias, cargos, ajustes, otro usuario, cambio de año, rango de meses y la API. |
+
+La interfaz no calcula porcentajes: los recibe como texto ("55.1"). Por el redondeo, los de una
+lista pueden sumar 99,9 o 100,1.
+
+Verificación:
+- `pytest`: **548 pruebas pasan** (antes 522).
+- Pruebas de mutación: se rompió el código a propósito de 6 formas (filtros en el `WHERE` en vez
+  del `ON`, sin filtro de estado, `<=` en el límite del mes, redondeo bancario, porcentaje de la
+  subcategoría sobre su raíz, un mes de menos en la serie): las 6 hicieron fallar alguna prueba.
+- Servidor real contra `financia_pruebas` con los datos de demostración (base vacía al terminar):
+  Ana tiene egresos de 90.800 → Alimentación 55,1 %, Mascotas 44,1 %, Impuestos 0,9 %;
+  `/api/resumen/mensual` da junio a octubre en 0 y noviembre con ingresos 50.000 y egresos 90.800;
+  `?meses=12` da 12 meses; `?meses=30` responde 400 con "El número de meses debe estar entre 1 y 24.".
+
 ## 4. Lo que NO existe todavía
 
 - Lo aplazado por decisión del proyecto (`REQUISITOS.md`, sección 3): facturas, Gmail,
@@ -595,6 +620,7 @@ demostración se borraron al terminar; `financia` no se tocó):
 | 15 | Datos de prueba y pruebas de CA-01 a CA-15 | **Hecho: 16 pruebas; cargador y servidor probados** | `REQUISITOS.md`, sección 4 |
 
 | 16 | Interfaz React: las siete pantallas | **Hecho: 57 pruebas (Vitest); cada pantalla probada en el navegador** | RF-01 a RF-17 |
+| 17 | Gráficos del resumen (etapa 1 de 3: datos en la API) | **Etapa 1 hecha: 26 pruebas nuevas** | RF-15 |
 
 **Siguiente paso recomendado:** practicar la demostración con los datos de `financia` y, si se quiere, subir el repositorio a GitHub. La versión 1 (API e interfaz) está completa.
 
@@ -701,3 +727,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Interfaz React, paso 5: pantalla de transferencias con sus cargos. El menú baja de línea en celulares. Probada en el navegador contra la base de pruebas. |
 | 2026-11-22 | Interfaz React, paso 6: pantalla de ajustes de saldo. Probada en el navegador contra la base de pruebas. |
 | 2026-11-22 | Interfaz React, paso 7: pantalla de bolsillos y metas. **La interfaz tiene todas las pantallas.** Probada en el navegador contra la base de pruebas. |
+| 2026-11-22 | Gráficos, etapa 1: porcentaje por categoría en `/api/resumen` y `GET /api/resumen/mensual` (SQL con `generate_series`). **548 pruebas pasan.** |

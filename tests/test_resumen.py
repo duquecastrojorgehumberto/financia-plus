@@ -7,7 +7,9 @@ Qué verifican
     * Los criterios de las tareas anteriores vistos desde el resumen:
       CA-01, CA-02 (los cargos son egresos; la transferencia no), CA-11 (el ajuste no
       cambia los egresos) y CA-14 (una categoría desactivada sigue sumando).
-    * La API GET /api/resumen.
+    * Porcentaje de cada categoría sobre el total de su tipo (para los gráficos).
+    * Resumen mensual (últimos N meses, con 0 en los meses vacíos).
+    * La API GET /api/resumen y GET /api/resumen/mensual.
 
 Usan con_tx, cliente_api y Mundo (conftest.py). Mundo trae Nequi (100.000) y Nubank (0).
 """
@@ -24,7 +26,7 @@ from app.servicios.bolsillos import BolsilloServicio, DatosBolsillo
 from app.servicios.categorias import CategoriaServicio
 from app.servicios.cuentas import CuentaServicio
 from app.servicios.movimientos import MovimientoServicio
-from app.servicios.resumen import ResumenServicio
+from app.servicios.resumen import ResumenServicio, porcentaje
 from app.servicios.transferencias import DatosCargo, DatosTransferencia, TransferenciaServicio
 from conftest import FECHA, Mundo
 
@@ -222,12 +224,137 @@ def test_datos_publicos(servicio, m, mov):
     assert datos["egresos"] == "30000.00"
     assert datos["balance"] == "-30000.00"
     assert datos["categorias"]["egresos"][0] == {
-        "id_categoria": m.alimentacion, "nombre": "Alimentación", "total": "30000.00", "directo": "0.00",
-        "subcategorias": [{"id_categoria": m.mercado, "nombre": "Mercado", "total": "30000.00"}]}
+        "id_categoria": m.alimentacion, "nombre": "Alimentación", "total": "30000.00", "porcentaje": "100.0",
+        "directo": "0.00", "porcentaje_directo": "0.0",
+        "subcategorias": [{"id_categoria": m.mercado, "nombre": "Mercado", "total": "30000.00",
+                           "porcentaje": "100.0"}]}
 
 
 # =====================================================================
-# 4. API GET /api/resumen
+# 4. Porcentaje de cada categoría sobre el total de su tipo
+# =====================================================================
+
+@pytest.mark.parametrize("parte, total, esperado", [
+    ("1", "16", "6.3"),          # 6,25: la mitad se redondea hacia arriba (no 6,2)
+    ("2", "3", "66.7"),
+    ("1", "3", "33.3"),
+    ("30000", "30000", "100.0"),
+    ("0", "50000", "0.0"),
+    ("0", "0", "0"),             # sin total no hay porcentaje: 0, sin dividir por cero
+])
+def test_porcentaje_con_decimal_y_un_decimal(parte, total, esperado):
+    resultado = porcentaje(Decimal(parte), Decimal(total))
+    assert isinstance(resultado, Decimal)
+    assert resultado == Decimal(esperado)
+
+
+def test_porcentajes_de_raices_y_subcategorias(servicio, m, mov):
+    """Alimentación 30.000 (10.000 directo + 20.000 en Mercado) y Transporte 10.000: total 40.000."""
+    mov.registrar(m.u, "EGRESO", m.datos("10000", categoria=m.alimentacion))
+    mov.registrar(m.u, "EGRESO", m.datos("20000", categoria=m.mercado))
+    mov.registrar(m.u, "EGRESO", m.datos("10000", categoria=m.transporte))
+    egresos = noviembre(servicio, m).datos_publicos()["categorias"]["egresos"]
+    alimentacion, transporte = egresos
+    assert (alimentacion["porcentaje"], alimentacion["porcentaje_directo"]) == ("75.0", "25.0")
+    assert alimentacion["subcategorias"][0]["porcentaje"] == "50.0"   # sobre el total de egresos, no de su raíz
+    assert transporte["porcentaje"] == "25.0"
+
+
+def test_ingresos_y_egresos_tienen_cada_uno_su_total(servicio, m, mov):
+    """El porcentaje de un ingreso es sobre los ingresos; el de un egreso, sobre los egresos."""
+    mov.registrar(m.u, "INGRESO", m.datos("3000000", categoria=m.salario))
+    mov.registrar(m.u, "EGRESO", m.datos("1000", categoria=m.transporte))
+    categorias = noviembre(servicio, m).datos_publicos()["categorias"]
+    assert categorias["ingresos"][0]["porcentaje"] == "100.0"
+    assert categorias["egresos"][0]["porcentaje"] == "100.0"
+
+
+def test_porcentajes_redondeados(servicio, m, mov):
+    """Tres tercios: 33,3 cada uno. Por el redondeo pueden no sumar exactamente 100."""
+    for cat in (m.alimentacion, m.transporte, m.impuestos):
+        mov.registrar(m.u, "EGRESO", m.datos("1000", categoria=cat))
+    egresos = noviembre(servicio, m).datos_publicos()["categorias"]["egresos"]
+    assert [c["porcentaje"] for c in egresos] == ["33.3", "33.3", "33.3"]
+
+
+# =====================================================================
+# 5. Resumen mensual (gráfico de ingresos y egresos)
+# =====================================================================
+
+MEDIADOS_DE_NOVIEMBRE = date(2026, 11, 15)
+
+
+def mensual(servicio, m, meses=6, referencia=MEDIADOS_DE_NOVIEMBRE):
+    return {t.mes.strftime("%Y-%m"): (t.ingresos, t.egresos) for t in servicio.mensual(m.u, meses, referencia)}
+
+
+def test_mensual_trae_todos_los_meses_aunque_esten_vacios(servicio, m):
+    totales = servicio.mensual(m.u, 6, MEDIADOS_DE_NOVIEMBRE)
+    assert [t.mes for t in totales] == [date(2026, mes, 1) for mes in range(6, 12)]   # junio a noviembre
+    assert all((t.ingresos, t.egresos, t.balance()) == (0, 0, 0) for t in totales)
+
+
+def test_mensual_suma_cada_mes_con_sus_limites(servicio, m, mov):
+    """RN-64: el primer y el último día de cada mes cuentan en su mes; lo de fuera del rango, no."""
+    for dia, monto in ((date(2026, 5, 31), "1"),        # antes de junio: fuera
+                       (date(2026, 6, 1), "10"),        # primer día del rango
+                       (date(2026, 9, 30), "100"),      # último día de septiembre
+                       (date(2026, 10, 1), "1000"),
+                       (date(2026, 11, 30), "10000"),   # último día del rango
+                       (date(2026, 12, 1), "100000")):  # después de noviembre: fuera
+        mov.registrar(m.u, "EGRESO", m.datos(monto, fecha=dia))
+    mov.registrar(m.u, "INGRESO", m.datos("50000", categoria=m.salario, fecha=date(2026, 11, 1)))
+    assert mensual(servicio, m) == {
+        "2026-06": (0, Decimal("10.00")), "2026-07": (0, 0), "2026-08": (0, 0),
+        "2026-09": (0, Decimal("100.00")), "2026-10": (0, Decimal("1000.00")),
+        "2026-11": (Decimal("50000.00"), Decimal("10000.00")),
+    }
+
+
+def test_mensual_solo_vigentes_sin_transferencias_ni_ajustes(servicio, con_tx, m, mov):
+    """RN-64 y RN-53: el anulado, la transferencia y el ajuste no cuentan; el cargo sí (es egreso, D-05)."""
+    anulado = mov.registrar(m.u, "EGRESO", m.datos("20000")).movimiento.id_movimiento
+    mov.anular(m.u, anulado)
+    TransferenciaServicio(con_tx).registrar(m.u, DatosTransferencia(
+        m.nequi, m.nubank, Decimal("200000"), FECHA, cargos=[DatosCargo(Decimal("800"), m.impuestos)]))
+    AjusteServicio(con_tx).ajustar(m.u, m.nequi, Decimal("5000"), "Cuadre con el banco", FECHA)
+    assert mensual(servicio, m)["2026-11"] == (0, Decimal("800.00"))
+
+
+def test_mensual_otro_usuario_no_cuenta(servicio, con_tx, m, mov):
+    otro = Mundo(con_tx)
+    mov.registrar(otro.u, "INGRESO", otro.datos("999999", categoria=otro.salario))
+    assert mensual(servicio, m)["2026-11"] == (0, 0)
+
+
+def test_mensual_cruza_el_cambio_de_anio(servicio, m, mov):
+    mov.registrar(m.u, "EGRESO", m.datos("300", fecha=date(2026, 12, 24)))
+    mov.registrar(m.u, "EGRESO", m.datos("700", fecha=date(2027, 1, 2)))
+    assert mensual(servicio, m, 3, date(2027, 2, 10)) == {
+        "2026-12": (0, Decimal("300.00")), "2027-01": (0, Decimal("700.00")), "2027-02": (0, 0)}
+
+
+def test_mensual_un_solo_mes_y_sin_referencia_es_el_actual(servicio, m):
+    totales = servicio.mensual(m.u, 1)
+    assert [t.mes for t in totales] == [date.today().replace(day=1)]
+
+
+@pytest.mark.parametrize("meses", [0, 25, -3])
+def test_mensual_meses_fuera_de_rango(servicio, m, meses):
+    with pytest.raises(ErrorNegocio, match="entre 1 y 24"):
+        servicio.mensual(m.u, meses, MEDIADOS_DE_NOVIEMBRE)
+
+
+def test_mensual_datos_publicos(servicio, m, mov):
+    mov.registrar(m.u, "INGRESO", m.datos("50000", categoria=m.salario))
+    mov.registrar(m.u, "EGRESO", m.datos("80000.50"))
+    noviembre_ = servicio.mensual(m.u, 1, MEDIADOS_DE_NOVIEMBRE)[0]
+    assert noviembre_.datos_publicos() == {
+        "mes": "2026-11", "ingresos": "50000.00", "egresos": "80000.50", "balance": "-30000.50"}
+
+
+# =====================================================================
+# 6. API GET /api/resumen y GET /api/resumen/mensual
 # =====================================================================
 
 @pytest.fixture
@@ -268,3 +395,48 @@ def test_api_fechas_invalidas(api, consulta, mensaje):
 
 def test_api_sin_sesion(cliente_api):
     assert cliente_api.get("/api/resumen").status_code == 401
+
+
+def test_api_resumen_trae_porcentajes(api):
+    api.post("/api/movimientos", headers=ENCABEZADOS, json={
+        "tipo": "EGRESO", "id_cuenta": _id_cuenta(api), "id_categoria": _id_categoria(api, "Transporte"),
+        "monto": "12000", "fecha": "2026-11-05"})
+    egresos = api.get("/api/resumen?desde=2026-11-01&hasta=2026-11-30").get_json()["periodo"]["categorias"]["egresos"]
+    assert [(c["nombre"], c["total"], c["porcentaje"]) for c in egresos] == [("Transporte", "12000.00", "100.0")]
+
+
+def test_api_mensual_por_defecto_seis_meses_hasta_el_actual(api):
+    r = api.get("/api/resumen/mensual")
+    assert r.status_code == 200
+    meses = r.get_json()["meses"]
+    assert len(meses) == 6
+    assert meses[-1]["mes"] == date.today().strftime("%Y-%m")
+    assert meses[0] == {"mes": meses[0]["mes"], "ingresos": "0.00", "egresos": "0.00", "balance": "0.00"}
+
+
+def test_api_mensual_con_meses(api):
+    assert len(api.get("/api/resumen/mensual?meses=12").get_json()["meses"]) == 12
+
+
+@pytest.mark.parametrize("consulta, mensaje", [
+    ("meses=0", "entre 1 y 24"),
+    ("meses=25", "entre 1 y 24"),
+    ("meses=seis", "número entero"),
+])
+def test_api_mensual_meses_invalidos(api, consulta, mensaje):
+    r = api.get(f"/api/resumen/mensual?{consulta}")
+    assert r.status_code == 400
+    assert mensaje in r.get_json()["error"]
+
+
+def test_api_mensual_sin_sesion(cliente_api):
+    assert cliente_api.get("/api/resumen/mensual").status_code == 401
+
+
+def _id_cuenta(api) -> int:
+    return api.get("/api/cuentas").get_json()["cuentas"][0]["id_cuenta"]
+
+
+def _id_categoria(api, nombre: str) -> int:
+    ramas = api.get("/api/categorias?tipo=EGRESO").get_json()["categorias"]
+    return next(r["id_categoria"] for r in ramas if r["nombre"] == nombre)

@@ -12,6 +12,12 @@ Resumen de un periodo (de "desde" a "hasta", ambas fechas incluidas)
          porque son egresos (D-05).
   RN-53  Los ajustes NO son ingresos ni gastos: se muestran aparte.
   RN-27  El total de una categoría incluye el de sus subcategorías (CA-12).
+         Cada categoría trae también su porcentaje sobre el total de su tipo
+         (calculado aquí, con Decimal: la interfaz no calcula nada).
+
+Resumen mensual (para el gráfico de ingresos y egresos)
+  Por cada uno de los últimos N meses: ingresos, egresos y balance, con las
+  mismas reglas RN-64 y RN-53. Los meses sin movimientos aparecen con 0.
 
 Ninguno de estos datos se guarda en la base: todos se calculan al pedirlos (D-11).
 """
@@ -19,7 +25,7 @@ Ninguno de estos datos se guarda en la base: todos se calculan al pedirlos (D-11
 from calendar import monthrange
 from dataclasses import dataclass, field
 from datetime import date
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 import psycopg
 
@@ -30,10 +36,28 @@ from app.repositorios.cuentas import CuentaRepositorio
 from app.repositorios.resumen import ResumenRepositorio
 
 CERO = Decimal("0")
+CIEN = Decimal("100")
+UN_DECIMAL = Decimal("0.1")
+MESES_MAXIMOS = 24
 
 
 def _texto(valor: Decimal) -> str:
     return f"{valor:.2f}"
+
+
+def porcentaje(parte: Decimal, total: Decimal) -> Decimal:
+    """parte ÷ total × 100, redondeado a UN decimal (la mitad hacia arriba: 12.25 → 12.3).
+
+    Todo con Decimal, nunca float. Si el total es 0 no hay de qué sacar porcentaje: 0.
+    Por el redondeo, los porcentajes de una lista pueden sumar 99,9 o 100,1; es normal.
+    """
+    if total == 0:
+        return CERO
+    return (parte / total * CIEN).quantize(UN_DECIMAL, rounding=ROUND_HALF_UP)
+
+
+def _texto_porcentaje(valor: Decimal) -> str:
+    return f"{valor:.1f}"
 
 
 @dataclass(frozen=True)
@@ -73,15 +97,27 @@ class TotalCategoria:
     def total(self) -> Decimal:
         return self.directo + sum((s["total"] for s in self.subcategorias), CERO)
 
-    def datos_publicos(self) -> dict:
+    def datos_publicos(self, total_del_tipo: Decimal) -> dict:
+        """total_del_tipo: la suma de todas las raíces del mismo tipo (ingresos o egresos).
+        Cada porcentaje es sobre ese total, también el de cada subcategoría."""
         return {
             "id_categoria": self.id_categoria,
             "nombre": self.nombre,
             "total": _texto(self.total()),
+            "porcentaje": _texto_porcentaje(porcentaje(self.total(), total_del_tipo)),
             "directo": _texto(self.directo),
+            "porcentaje_directo": _texto_porcentaje(porcentaje(self.directo, total_del_tipo)),
             "subcategorias": [{"id_categoria": s["id_categoria"], "nombre": s["nombre"],
-                               "total": _texto(s["total"])} for s in self.subcategorias],
+                               "total": _texto(s["total"]),
+                               "porcentaje": _texto_porcentaje(porcentaje(s["total"], total_del_tipo))}
+                              for s in self.subcategorias],
         }
+
+
+def _categorias_publicas(categorias: list[TotalCategoria]) -> list[dict]:
+    """Las raíces de UN tipo, cada una con su porcentaje sobre la suma de todas ellas."""
+    total_del_tipo = sum((c.total() for c in categorias), CERO)
+    return [c.datos_publicos(total_del_tipo) for c in categorias]
 
 
 @dataclass(frozen=True)
@@ -108,8 +144,29 @@ class ResumenPeriodo:
             "balance": _texto(self.balance()),
             "ajustes": {"aumentos": _texto(self.ajustes_aumento),
                         "disminuciones": _texto(self.ajustes_disminucion)},
-            "categorias": {"ingresos": [c.datos_publicos() for c in self.categorias_ingreso],
-                           "egresos": [c.datos_publicos() for c in self.categorias_egreso]},
+            "categorias": {"ingresos": _categorias_publicas(self.categorias_ingreso),
+                           "egresos": _categorias_publicas(self.categorias_egreso)},
+        }
+
+
+@dataclass(frozen=True)
+class TotalMes:
+    """Ingresos y egresos VIGENTES de un mes (RN-64). mes es el primer día del mes."""
+
+    mes: date
+    ingresos: Decimal
+    egresos: Decimal
+
+    def balance(self) -> Decimal:
+        """Ingresos − egresos del mes. Los ajustes no entran (RN-53)."""
+        return self.ingresos - self.egresos
+
+    def datos_publicos(self) -> dict:
+        return {
+            "mes": self.mes.strftime("%Y-%m"),   # "2026-11"
+            "ingresos": _texto(self.ingresos),
+            "egresos": _texto(self.egresos),
+            "balance": _texto(self.balance()),
         }
 
 
@@ -139,6 +196,15 @@ class ResumenServicio:
             categorias_ingreso=ingresos,
             categorias_egreso=egresos,
         )
+
+    def mensual(self, id_usuario: int, meses: int = 6, referencia: date | None = None) -> list[TotalMes]:
+        """Los últimos `meses` meses hasta el de `referencia` (por defecto, hoy), del más antiguo
+        al más reciente. Siempre devuelve exactamente `meses` elementos: los vacíos con 0."""
+        if not 1 <= meses <= MESES_MAXIMOS:
+            raise ErrorNegocio(f"El número de meses debe estar entre 1 y {MESES_MAXIMOS}.")
+        ultimo_mes = (referencia or date.today()).replace(day=1)
+        filas = self.resumen.totales_mensuales(id_usuario, ultimo_mes, meses)
+        return [TotalMes(mes=f["mes"], ingresos=f["ingresos"], egresos=f["egresos"]) for f in filas]
 
     # ------------------------------------------------------------------
     # Métodos internos

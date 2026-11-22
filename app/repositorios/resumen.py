@@ -65,3 +65,49 @@ class ResumenRepositorio:
             """,
             (id_usuario, desde, hasta),
         ).fetchall()
+
+    def totales_mensuales(self, id_usuario: int, ultimo_mes: date, meses: int) -> list[dict]:
+        """Ingresos y egresos VIGENTES de cada uno de los últimos `meses` meses (RN-64).
+
+        ultimo_mes es el primer día del mes más reciente (por ejemplo 2026-11-01).
+        Devuelve una fila por mes, del más antiguo al más reciente, con 0 en los
+        meses sin movimientos: [{mes: date, ingresos: Decimal, egresos: Decimal}, ...].
+
+        Cómo funciona la consulta, paso a paso:
+          1. generate_series arma la lista de meses aunque no tengan movimientos:
+             desde (ultimo_mes − (meses − 1) meses) hasta ultimo_mes, de 1 en 1 mes.
+             date_trunc('month', ...) deja la fecha en el día 1 de su mes.
+          2. LEFT JOIN pega a cada mes sus movimientos. Por ser LEFT, un mes sin
+             movimientos se conserva (con m.* en NULL) y COALESCE lo vuelve 0.
+             Por eso los filtros del movimiento (id_usuario, estado, tipo) van en el
+             ON y no en el WHERE: en el WHERE descartarían los meses vacíos.
+          3. El mes se compara con un rango (fecha >= mes AND fecha < mes + 1 mes)
+             en vez de date_trunc(m.fecha): así PostgreSQL puede usar el índice de fecha.
+          4. SUM(...) FILTER (WHERE tipo = ...) suma ingresos y egresos por separado
+             en una sola pasada. Transferencias y ajustes no entran (RN-64, RN-53).
+        """
+        return self.con.execute(
+            """
+            WITH meses AS (
+                SELECT generate_series(
+                           date_trunc('month', %(ultimo_mes)s::date)
+                               - (%(meses)s::int - 1) * interval '1 month',
+                           date_trunc('month', %(ultimo_mes)s::date),
+                           interval '1 month'
+                       )::date AS mes
+            )
+            SELECT meses.mes,
+                   COALESCE(SUM(m.monto) FILTER (WHERE m.tipo = 'INGRESO'), 0) AS ingresos,
+                   COALESCE(SUM(m.monto) FILTER (WHERE m.tipo = 'EGRESO'), 0)  AS egresos
+              FROM meses
+              LEFT JOIN movimiento m
+                ON m.id_usuario = %(id_usuario)s
+               AND m.estado = 'VIGENTE'
+               AND m.tipo IN ('INGRESO', 'EGRESO')
+               AND m.fecha >= meses.mes
+               AND m.fecha <  meses.mes + interval '1 month'
+             GROUP BY meses.mes
+             ORDER BY meses.mes
+            """,
+            {"id_usuario": id_usuario, "ultimo_mes": ultimo_mes, "meses": meses},
+        ).fetchall()
