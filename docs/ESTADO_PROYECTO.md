@@ -1,21 +1,21 @@
 # Estado del proyecto — FINANCIA+
 
-Última actualización: 22 de noviembre de 2026 (Tarea 11). **Actualiza este archivo cada vez que termines una tarea.**
+Última actualización: 22 de noviembre de 2026 (Tarea 12). **Actualiza este archivo cada vez que termines una tarea.**
 
 ## 1. Resumen en una frase
 
 La base de datos está creada, migrada (`0001` y `0002`) y probada; la API Flask funciona con
 autenticación, cuentas (saldo calculado; archivar solo con saldo 0), categorías, ingresos, egresos,
-historial y transferencias con cargos, y **413 pruebas pasan**. Todavía no hay ajustes, bolsillos,
-resumen ni interfaz.
+historial, transferencias con cargos y ajustes de saldo, y **441 pruebas pasan**. Todavía no hay
+bolsillos, resumen ni interfaz.
 
 ## 2. Estado por categoría
 
 | Categoría | Qué hay |
 | --- | --- |
-| **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); ingresos, egresos e historial (Tarea 10); transferencias con cargos (Tarea 11); 413 pruebas. |
+| **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); ingresos, egresos e historial (Tarea 10); transferencias con cargos (Tarea 11); ajustes de saldo (Tarea 12); 441 pruebas. |
 | **Documentado** | Requisitos (17 RF, 10 RNF, 15 criterios), arquitectura, modelo de datos (6 tablas), reglas de negocio, 21 decisiones (todas confirmadas), auditoría del diseño anterior, categorías por defecto, guía de continuidad, instalación y uso diario en `README.md`. |
-| **Pendiente** | Tareas 12 a 15 (sección 5). La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
+| **Pendiente** | Tareas 13 a 15 (sección 5). La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
 
 ## 3. Detalle de lo hecho
 
@@ -251,9 +251,39 @@ Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026*
 - **La API no propone "Impuestos y comisiones"**: la interfaz la encuentra por nombre en el árbol de
   categorías y la preselecciona (P-19: no tiene protección especial).
 
+### 3.10 Ajustes de saldo (Tarea 12: RF-17)
+
+| Archivo | Qué hace |
+| --- | --- |
+| `app/servicios/ajustes.py` | `AjusteServicio.ajustar`: flujo 5.4 de `ARQUITECTURA.md` — bloquea la cuenta (`FOR UPDATE`), calcula el saldo, registra `AJUSTE_AUMENTO` o `AJUSTE_DISMINUCION` por la diferencia (nada si es 0). `corregir`: fecha y motivo. `ResultadoAjuste` (saldo anterior, cuenta y ajuste). |
+| `app/repositorios/movimientos.py` | Nuevos `insertar_ajuste` y `corregir_ajuste`. |
+| `app/rutas/ajustes.py` | `POST /api/cuentas/<id>/ajustes` (201 si hubo ajuste, 200 si no) y `PUT /api/ajustes/<id>`. |
+| `app/rutas/entrada.py` | Nuevo `fecha_opcional`. |
+
+Verificado:
+- `tests/test_ajustes.py` (28 casos): CA-11 (480.000 → 473.500: `AJUSTE_DISMINUCION` de 6.500;
+  ingresos y egresos sin cambio, RN-53), aumento, diferencia cero, saldo real negativo, motivo
+  obligatorio, cuenta archivada y ajena, anular y reactivar (RN-54), corregir y API.
+- **RN-55 con una carrera real:** otra conexión deja un ingreso de 1.000 sin confirmar y lo confirma
+  medio segundo después; el ajuste espera e incluye ese ingreso (saldo anterior 1.000, ajuste de
+  4.000, saldo final 5.000). **Prueba de mutación:** sin el `FOR UPDATE`, el ajuste calcula con saldo
+  0 y la prueba falla.
+- Servidor real (contra `financia_pruebas`): CA-11, sin diferencia (200, sin ajuste), corregir el
+  monto rechazado, anular el ajuste devuelve el saldo. Datos de la verificación eliminados.
+- Las pruebas dejan la base de pruebas vacía.
+
+Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
+- **De un ajuste solo se corrigen la fecha y el motivo.** RN-72 permite corregir el monto de
+  cualquier movimiento, pero el monto de un ajuste no lo escribe el usuario: sale de un cálculo.
+  Si estaba mal, se anula y se hace otro ajuste con el saldo real correcto.
+- **La fecha del ajuste es opcional**: si no se envía, es la de hoy.
+- **El saldo real puede ser negativo** (por ejemplo, un sobregiro), igual que el saldo calculado (RN-14).
+- **Sin diferencia, la respuesta es 200 con `"ajuste": null`** y no se registra nada (RN-51).
+- **La ruta va bajo la cuenta**: `POST /api/cuentas/<id>/ajustes`.
+
 ## 4. Lo que NO existe todavía
 
-- Módulos de ajustes, bolsillos y resumen: sin repositorios, servicios ni rutas (Tareas 12 a 14).
+- Módulos de bolsillos y resumen: sin entidades, repositorios, servicios ni rutas (Tareas 13 y 14).
 - No hay datos de prueba (`db/semillas/datos_prueba.sql`).
 - No hay interfaz (`frontend/`).
 - El repositorio Git no tiene remoto (no se ha subido a GitHub).
@@ -274,12 +304,12 @@ Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026*
 | 9 | Categorías | **Hecho: 48 pruebas; servidor probado** | RF-03 |
 | 10 | Ingresos, egresos, historial, anular y corregir | **Hecho: 73 pruebas; servidor probado** | RF-04, RF-05, RF-14, RF-16 |
 | 11 | Transferencias con cargos | **Hecho: 53 pruebas; servidor probado** | RF-06, RF-07 |
-| 12 | Ajustes de saldo | Pendiente (**esperando aprobación**) | RF-17 |
-| 13 | Bolsillos, metas e historial | Pendiente | RF-08 a RF-10, RF-12 |
+| 12 | Ajustes de saldo | **Hecho: 28 pruebas; servidor probado** | RF-17 |
+| 13 | Bolsillos, metas e historial | Pendiente (**esperando aprobación**) | RF-08 a RF-10, RF-12 |
 | 14 | Resumen financiero e indicadores | Pendiente | RF-13, RF-15 |
 | 15 | Datos de prueba y pruebas de CA-01 a CA-15 | Pendiente | `REQUISITOS.md`, sección 4 |
 
-**Siguiente paso recomendado:** Tarea 12 (ajustes de saldo), cuando el estudiante la apruebe.
+**Siguiente paso recomendado:** confirmar las cinco decisiones de la sección 3.10 y luego la Tarea 13 (bolsillos).
 
 ## 6. Decisiones confirmadas por el estudiante (17 y 22 de noviembre de 2026)
 
@@ -349,3 +379,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Confirmadas P-20 a P-24 (una ruta para ingresos y egresos, filtros del historial, categoría desactivada en correcciones y reactivaciones, fechas futuras, sin paginación). |
 | 2026-11-22 | Tarea 11: transferencias con cargos (`TransferenciaServicio`, `VerificadorDeUso`, `TransferenciaConCargos`, rutas `/api/transferencias`); `tests/test_transferencias.py` con CA-02, CA-03 y CA-04 y prueba de mutación de la transacción. Servidor probado. **413 pruebas pasan.** |
 | 2026-11-22 | Confirmadas P-25 a P-28 (reactivar transferencia sin sus cargos, la fecha de los cargos sigue a la transferencia, agregar cargos después, la interfaz preselecciona "Impuestos y comisiones"). |
+| 2026-11-22 | Tarea 12: ajustes de saldo (`AjusteServicio` con `FOR UPDATE`, rutas `/api/cuentas/<id>/ajustes` y `/api/ajustes/<id>`); `tests/test_ajustes.py` con CA-11 y carrera real de RN-55 con prueba de mutación. Servidor probado. **441 pruebas pasan.** |

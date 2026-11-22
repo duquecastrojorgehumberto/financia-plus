@@ -18,7 +18,7 @@ Reglas:
 
 | Archivo (Tarea 10) | Clase | Estado |
 | --- | --- | --- |
-| `movimientos.py` | `MovimientoRepositorio`: `listar` (historial con filtros opcionales en una sola consulta), `obtener_detalle`, `obtener_para_actualizar`, `insertar_ingreso_o_egreso`, `corregir`, `cambiar_estado`; para transferencias: `listar_cargos`, `bloquear_cargos`, `insertar_transferencia`, `insertar_cargo`, `corregir_transferencia`, `cambiar_fecha_cargos`, `corregir_cargo` | Hecho (Tareas 10 y 11) |
+| `movimientos.py` | `MovimientoRepositorio`: `listar` (historial con filtros opcionales en una sola consulta), `obtener_detalle`, `obtener_para_actualizar`, `insertar_ingreso_o_egreso`, `corregir`, `cambiar_estado`; para transferencias: `listar_cargos`, `bloquear_cargos`, `insertar_transferencia`, `insertar_cargo`, `corregir_transferencia`, `cambiar_fecha_cargos`, `corregir_cargo`; para ajustes: `insertar_ajuste`, `corregir_ajuste` | Hecho (Tareas 10 a 12) |
 
 Bloqueos que usan los repositorios:
 - `FOR UPDATE` (exclusivo): la fila que se va a cambiar. Nadie más la cambia ni la usa hasta el COMMIT.

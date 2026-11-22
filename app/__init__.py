@@ -15,6 +15,7 @@ from app.bd import BaseDatos, cerrar_conexion
 from app.config import Config
 from app.csrf import registrar_csrf
 from app.errores import registrar_manejadores
+from app.rutas.ajustes import ajustes_bp
 from app.rutas.autenticacion import autenticacion_bp
 from app.rutas.categorias import categorias_bp
 from app.rutas.cuentas import cuentas_bp
@@ -55,4 +56,5 @@ def create_app(config: Config | None = None, bd: BaseDatos | None = None) -> Fla
     app.register_blueprint(categorias_bp)
     app.register_blueprint(movimientos_bp)
     app.register_blueprint(transferencias_bp)
+    app.register_blueprint(ajustes_bp)
     return app

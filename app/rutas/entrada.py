@@ -86,6 +86,13 @@ def fecha(datos: dict, campo: str) -> date:
     return _convertir_fecha(texto(datos, campo), campo)
 
 
+def fecha_opcional(datos: dict, campo: str) -> date | None:
+    """Una fecha opcional: texto "2026-11-01", o null / ausente."""
+    if datos.get(campo) is None:
+        return None
+    return fecha(datos, campo)
+
+
 def parametro_fecha(nombre: str) -> date | None:
     """?desde=2026-11-01 en la URL. Ausente o vacío: None."""
     valor = request.args.get(nombre, "")

@@ -231,6 +231,32 @@ class MovimientoRepositorio:
             (id_categoria, monto, descripcion, id_usuario, id_cargo),
         )
 
+    def insertar_ajuste(self, id_usuario: int, tipo: TipoMovimiento, id_cuenta: int, monto: Decimal,
+                        fecha: date, motivo: str) -> Movimiento:
+        """RN-51 y RN-52: AJUSTE_AUMENTO o AJUSTE_DISMINUCION, monto positivo, con motivo y sin categoría."""
+        fila = self.con.execute(
+            """
+            INSERT INTO movimiento (id_usuario, tipo, id_cuenta, monto, fecha, descripcion)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING id_movimiento, id_usuario, tipo, id_cuenta, id_cuenta_destino, id_categoria,
+                      id_transferencia, monto, fecha, descripcion, estado, creado_en, actualizado_en
+            """,
+            (id_usuario, str(tipo), id_cuenta, monto, fecha, motivo),
+        ).fetchone()
+        return self._a_movimiento(fila)
+
+    def corregir_ajuste(self, id_usuario: int, id_ajuste: int, fecha: date, motivo: str) -> None:
+        """De un ajuste se corrigen la fecha y el motivo; el monto salió de un cálculo."""
+        self.con.execute(
+            """
+            UPDATE movimiento
+               SET fecha = %s, descripcion = %s, actualizado_en = now()
+             WHERE id_usuario = %s
+               AND id_movimiento = %s
+            """,
+            (fecha, motivo, id_usuario, id_ajuste),
+        )
+
     def corregir(self, id_usuario: int, id_movimiento: int, id_cuenta: int, id_categoria: int,
                  monto: Decimal, fecha: date, descripcion: str | None) -> None:
         """RN-72 y RN-73: cambia los datos corregibles y marca actualizado_en. El tipo no se toca."""
