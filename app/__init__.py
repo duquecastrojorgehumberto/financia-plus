@@ -20,6 +20,7 @@ from app.rutas.categorias import categorias_bp
 from app.rutas.cuentas import cuentas_bp
 from app.rutas.movimientos import movimientos_bp
 from app.rutas.salud import salud_bp
+from app.rutas.transferencias import transferencias_bp
 
 
 def create_app(config: Config | None = None, bd: BaseDatos | None = None) -> Flask:
@@ -53,4 +54,5 @@ def create_app(config: Config | None = None, bd: BaseDatos | None = None) -> Fla
     app.register_blueprint(cuentas_bp)
     app.register_blueprint(categorias_bp)
     app.register_blueprint(movimientos_bp)
+    app.register_blueprint(transferencias_bp)
     return app

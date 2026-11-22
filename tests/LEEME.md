@@ -6,7 +6,7 @@ Pruebas con `pytest` contra una base PostgreSQL de pruebas (`DATABASE_URL_PRUEBA
 
 | Archivo | Qué prueba | Estado |
 | --- | --- | --- |
-| `conftest.py` | Conexiones a la base de pruebas: `con` (rol dueño), `con_app` (rol `financia_app`), `con_tx` y `cliente_api` (servicios y API: lo que confirman se deshace al final con ROLLBACK), `cuenta_confirmada` (datos confirmados para probar bloqueos entre dos conexiones) | Funciona |
+| `conftest.py` | Conexiones a la base de pruebas: `con` (rol dueño), `con_app` (rol `financia_app`), `con_tx` y `cliente_api` (servicios y API: lo que confirman se deshace al final con ROLLBACK), `cuenta_confirmada` (datos confirmados para probar bloqueos entre dos conexiones) y `Mundo` (un usuario con dos cuentas y sus categorías) | Funciona |
 | `test_restricciones_bd.py` | Que la base rechaza lo que debe rechazar y acepta lo que debe aceptar (Tarea 5) | Pasa |
 | `test_permisos_bd.py` | Que `financia_app` no puede borrar ni modificar el historial de bolsillos (Tarea 4, D-15) | Pasa |
 | `test_api_base.py` | `/api/salud`, protección CSRF y errores en JSON (Tarea 6) | Pasa |
@@ -14,7 +14,8 @@ Pruebas con `pytest` contra una base PostgreSQL de pruebas (`DATABASE_URL_PRUEBA
 | `test_cuentas.py` | Saldo calculado, crear, editar, archivar con saldo 0 y bloqueo de la fila (Tarea 8) | Pasa |
 | `test_categorias.py` | Raíces y subcategorías, dos niveles, solo cambia el nombre, desactivar con subcategorías, CA-14 (Tarea 9) | Pasa |
 | `test_movimientos.py` | Ingresos y egresos, CA-01, CA-05, CA-06, CA-13, CA-14, corregir, anular, reactivar, historial con filtros y carreras reales entre dos conexiones (Tarea 10) | Pasa |
-| `test_transferencias.py`, `test_bolsillos.py`, `test_resumen.py` | Servicios y criterios CA-01 a CA-15 | Pendiente |
+| `test_transferencias.py` | CA-02, CA-03 (con regla rota y con falla técnica), CA-04, corregir transferencia y cargos, agregar cargos, reactivar (Tarea 11) | Pasa |
+| `test_bolsillos.py`, `test_resumen.py` | Servicios y criterios CA-01 a CA-15 | Pendiente |
 
 ## Cómo ejecutarlas
 

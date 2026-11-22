@@ -15,6 +15,8 @@ se deshace con ROLLBACK. Ninguna prueba deja datos en la base.
 import os
 import pathlib
 import uuid
+from datetime import date
+from decimal import Decimal
 
 import psycopg
 import pytest
@@ -25,6 +27,10 @@ from psycopg.rows import dict_row
 from app import create_app
 from app.bd import BaseDatos
 from app.config import Config
+from app.servicios.autenticacion import AutenticacionServicio
+from app.servicios.categorias import CategoriaServicio
+from app.servicios.cuentas import CuentaServicio
+from app.servicios.movimientos import DatosMovimiento
 
 # Lee .env de la raíz del proyecto (DATABASE_URL_PRUEBAS) sin sobrescribir variables ya definidas.
 load_dotenv(pathlib.Path(__file__).resolve().parent.parent / ".env")
@@ -147,3 +153,58 @@ def cuenta_confirmada():
         admin.execute("DELETE FROM categoria WHERE id_usuario = %s", (u,))
         admin.execute("DELETE FROM usuario WHERE id_usuario = %s", (u,))
         admin.close()
+
+
+# ---------------------------------------------------------------------
+# Un "mundo" de datos para probar movimientos y transferencias.
+# ---------------------------------------------------------------------
+
+FECHA = date(2026, 11, 1)
+
+
+class Mundo:
+    """Un usuario con dos cuentas activas y sus categorías por defecto."""
+
+    def __init__(self, con):
+        self.con = con
+        correo = f"mov.{uuid.uuid4().hex[:10]}@prueba.example"
+        self.u = AutenticacionServicio(con).registrar("Ana", correo, "clave-segura-123").id_usuario
+        cuentas = CuentaServicio(con)
+        self.nequi = cuentas.crear(self.u, "Nequi", "BILLETERA_DIGITAL", Decimal("100000")).cuenta.id_cuenta
+        self.nubank = cuentas.crear(self.u, "Nubank", "AHORROS", Decimal("0")).cuenta.id_cuenta
+        arbol = CategoriaServicio(con).listar_arbol(self.u)
+        raices = {r.raiz.nombre: r for r in arbol}
+        self.salario = raices["Salario"].raiz.id_categoria
+        self.alimentacion = raices["Alimentación"].raiz.id_categoria
+        self.mercado = next(s.id_categoria for s in raices["Alimentación"].subcategorias if s.nombre == "Mercado")
+        self.transporte = raices["Transporte"].raiz.id_categoria
+        self.impuestos = raices["Impuestos y comisiones"].raiz.id_categoria
+
+    def datos(self, monto="1000", *, cuenta=None, categoria=None, fecha=FECHA, descripcion=None):
+        return DatosMovimiento(id_cuenta=cuenta or self.nequi, id_categoria=categoria or self.alimentacion,
+                               monto=Decimal(monto), fecha=fecha, descripcion=descripcion)
+
+    def saldo(self, cuenta=None) -> Decimal:
+        return CuentaServicio(self.con).obtener(self.u, cuenta or self.nequi).saldo
+
+    def transferencia(self, monto="200000", estado="VIGENTE") -> int:
+        """Transferencia Nequi -> Nubank, con SQL directo (Tarea 11 pendiente)."""
+        return self.con.execute(
+            "INSERT INTO movimiento (id_usuario, tipo, id_cuenta, id_cuenta_destino, monto, fecha, estado) "
+            "VALUES (%s, 'TRANSFERENCIA', %s, %s, %s, %s, %s) RETURNING id_movimiento",
+            (self.u, self.nequi, self.nubank, Decimal(monto), FECHA, estado),
+        ).fetchone()["id_movimiento"]
+
+    def cargo(self, id_transferencia, monto="800", estado="VIGENTE") -> int:
+        return self.con.execute(
+            "INSERT INTO movimiento (id_usuario, tipo, id_cuenta, id_categoria, id_transferencia, monto, fecha, estado) "
+            "VALUES (%s, 'EGRESO', %s, %s, %s, %s, %s, %s) RETURNING id_movimiento",
+            (self.u, self.nequi, self.impuestos, id_transferencia, Decimal(monto), FECHA, estado),
+        ).fetchone()["id_movimiento"]
+
+    def ajuste(self, monto="500") -> int:
+        return self.con.execute(
+            "INSERT INTO movimiento (id_usuario, tipo, id_cuenta, monto, fecha, descripcion) "
+            "VALUES (%s, 'AJUSTE_DISMINUCION', %s, %s, %s, 'Cuadre con el banco') RETURNING id_movimiento",
+            (self.u, self.nequi, Decimal(monto), FECHA),
+        ).fetchone()["id_movimiento"]

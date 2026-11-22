@@ -106,6 +106,16 @@ def parametro_texto(nombre: str) -> str | None:
     return request.args.get(nombre) or None
 
 
+def lista_de_objetos(datos: dict, campo: str) -> list[dict]:
+    """Una lista opcional de objetos JSON, por ejemplo los cargos: [{...}, {...}]. Ausente: []."""
+    valor = datos.get(campo)
+    if valor is None:
+        return []
+    if not isinstance(valor, list) or not all(isinstance(v, dict) for v in valor):
+        raise ErrorNegocio(f"El campo '{campo}' debe ser una lista de objetos.")
+    return valor
+
+
 def solo_campos(datos: dict, *permitidos: str) -> None:
     """Rechaza campos que la ruta no acepta, en lugar de ignorarlos en silencio."""
     sobrantes = sorted(set(datos) - set(permitidos))

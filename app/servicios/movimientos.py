@@ -14,10 +14,11 @@ Reglas que aplica
   RN-72  Se corrigen monto, fecha, categoría, cuenta y descripción; el tipo no.
   RN-73  Al corregir se actualiza actualizado_en.
 
-Qué queda para otras tareas
-  * Transferencias y cargos (registrar, corregir, anular en cascada): Tarea 11.
-    Aquí se rechaza anular o reactivar una TRANSFERENCIA (dejaría sus cargos
-    sin anular) y corregir un cargo (su cuenta y fecha dependen de la transferencia).
+Qué se hace en otro servicio
+  * Transferencias y sus cargos: TransferenciaServicio. Aquí se rechaza anular
+    o reactivar una TRANSFERENCIA (debe hacerse junto con sus cargos, RN-38) y
+    corregir un cargo (su cuenta y fecha dependen de la transferencia). Un
+    cargo sí se anula y reactiva aquí, solo (RN-38).
   * Registrar y corregir ajustes: Tarea 12. Anularlos y reactivarlos ya funciona (RN-54).
 
 Bloqueos (para que nada cambie entre la revisión y el cambio)
@@ -33,14 +34,11 @@ from decimal import Decimal
 
 import psycopg
 
-from app.entidades.categoria import Categoria
-from app.entidades.cuenta import Cuenta
 from app.entidades.movimiento import EstadoMovimiento, Movimiento, MovimientoDetalle, TipoMovimiento
 from app.errores import ErrorNegocio, NoEncontrado
-from app.repositorios.categorias import CategoriaRepositorio
-from app.repositorios.cuentas import CuentaRepositorio
 from app.repositorios.movimientos import MovimientoRepositorio
 from app.servicios.validaciones import validar_dinero
+from app.servicios.verificaciones import VerificadorDeUso
 
 TIPOS_INGRESO_EGRESO = (TipoMovimiento.INGRESO, TipoMovimiento.EGRESO)
 
@@ -72,8 +70,7 @@ class MovimientoServicio:
     def __init__(self, con: psycopg.Connection):
         self.con = con
         self.movimientos = MovimientoRepositorio(con)
-        self.cuentas = CuentaRepositorio(con)
-        self.categorias = CategoriaRepositorio(con)
+        self.verificar = VerificadorDeUso(con)
 
     # ------------------------------------------------------------------
     # Consultas
@@ -109,8 +106,8 @@ class MovimientoServicio:
                                "ajustes tienen su propio registro.")
         descripcion = self._validar_datos(datos)
         with self.con.transaction():
-            self._cuenta_activa(id_usuario, datos.id_cuenta)
-            self._categoria_utilizable(id_usuario, datos.id_categoria, tipo_movimiento)
+            self.verificar.cuenta_activa(id_usuario, datos.id_cuenta)
+            self.verificar.categoria_utilizable(id_usuario, datos.id_categoria, tipo_movimiento)
             movimiento = self.movimientos.insertar_ingreso_o_egreso(
                 id_usuario, tipo_movimiento, datos.id_cuenta, datos.id_categoria,
                 datos.monto, datos.fecha, descripcion)
@@ -126,14 +123,14 @@ class MovimientoServicio:
                                    "cargos y los ajustes se corrigen desde su propio registro.")
             if not movimiento.esta_vigente():
                 raise ErrorNegocio("El movimiento está anulado. Reactívelo para corregirlo.")
-            self._cuenta_activa(id_usuario, movimiento.id_cuenta,
+            self.verificar.cuenta_activa(id_usuario, movimiento.id_cuenta,
                                 "La cuenta del movimiento está archivada. Reactívela para corregirlo.")
             if datos.id_cuenta != movimiento.id_cuenta:
-                self._cuenta_activa(id_usuario, datos.id_cuenta)
+                self.verificar.cuenta_activa(id_usuario, datos.id_cuenta)
             if datos.id_categoria != movimiento.id_categoria:
                 # Una categoría nueva debe poder usarse; si no cambia, se conserva aunque
                 # se haya desactivado después (el movimiento no es nuevo).
-                self._categoria_utilizable(id_usuario, datos.id_categoria, movimiento.tipo)
+                self.verificar.categoria_utilizable(id_usuario, datos.id_categoria, movimiento.tipo)
             self.movimientos.corregir(id_usuario, id_movimiento, datos.id_cuenta, datos.id_categoria,
                                       datos.monto, datos.fecha, descripcion)
         return self.obtener(id_usuario, id_movimiento)
@@ -184,29 +181,9 @@ class MovimientoServicio:
         if movimiento.tipo == TipoMovimiento.TRANSFERENCIA:
             raise ErrorNegocio("Las transferencias se anulan y reactivan junto con sus cargos, "
                                "desde el registro de transferencias.")
-        self._cuenta_activa(id_usuario, movimiento.id_cuenta,
+        self.verificar.cuenta_activa(id_usuario, movimiento.id_cuenta,
                             "La cuenta del movimiento está archivada. Reactívela primero.")
         return movimiento
-
-    def _cuenta_activa(self, id_usuario: int, id_cuenta: int,
-                       mensaje_archivada: str = "La cuenta está archivada: no admite movimientos.") -> Cuenta:
-        cuenta = self.cuentas.obtener_para_usar(id_usuario, id_cuenta)
-        if cuenta is None:
-            raise NoEncontrado("No se encontró la cuenta.")
-        if not cuenta.activa:
-            raise ErrorNegocio(mensaje_archivada)
-        return cuenta
-
-    def _categoria_utilizable(self, id_usuario: int, id_categoria: int, tipo: TipoMovimiento) -> Categoria:
-        categoria = self.categorias.obtener_para_usar(id_usuario, id_categoria)
-        if categoria is None:
-            raise NoEncontrado("No se encontró la categoría.")
-        if categoria.tipo != tipo:
-            raise ErrorNegocio(f"La categoría '{categoria.nombre}' es de tipo {categoria.tipo}; "
-                               f"un movimiento de tipo {tipo} necesita una categoría de tipo {tipo}.")
-        if not categoria.activa:
-            raise ErrorNegocio(f"La categoría '{categoria.nombre}' está desactivada.")
-        return categoria
 
     @staticmethod
     def _validar_datos(datos: DatosMovimiento) -> str | None:

@@ -1,21 +1,21 @@
 # Estado del proyecto — FINANCIA+
 
-Última actualización: 22 de noviembre de 2026 (Tarea 10). **Actualiza este archivo cada vez que termines una tarea.**
+Última actualización: 22 de noviembre de 2026 (Tarea 11). **Actualiza este archivo cada vez que termines una tarea.**
 
 ## 1. Resumen en una frase
 
 La base de datos está creada, migrada (`0001` y `0002`) y probada; la API Flask funciona con
-autenticación, cuentas (saldo calculado; archivar solo con saldo 0), categorías, ingresos, egresos
-e historial, y **360 pruebas pasan**. Todavía no hay transferencias, ajustes, bolsillos, resumen ni
-interfaz.
+autenticación, cuentas (saldo calculado; archivar solo con saldo 0), categorías, ingresos, egresos,
+historial y transferencias con cargos, y **413 pruebas pasan**. Todavía no hay ajustes, bolsillos,
+resumen ni interfaz.
 
 ## 2. Estado por categoría
 
 | Categoría | Qué hay |
 | --- | --- |
-| **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); ingresos, egresos e historial (Tarea 10); 360 pruebas. |
+| **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); ingresos, egresos e historial (Tarea 10); transferencias con cargos (Tarea 11); 413 pruebas. |
 | **Documentado** | Requisitos (17 RF, 10 RNF, 15 criterios), arquitectura, modelo de datos (6 tablas), reglas de negocio, 21 decisiones (todas confirmadas), auditoría del diseño anterior, categorías por defecto, guía de continuidad, instalación y uso diario en `README.md`. |
-| **Pendiente** | Tareas 11 a 15 (sección 5). La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
+| **Pendiente** | Tareas 12 a 15 (sección 5). La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
 
 ## 3. Detalle de lo hecho
 
@@ -216,10 +216,44 @@ Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026*
 - **Se aceptan fechas futuras** (por ejemplo, un pago programado). Los documentos no lo limitan.
 - **El historial no tiene paginación**: devuelve todos los movimientos que cumplen los filtros.
 
+### 3.9 Transferencias con cargos (Tarea 11: RF-06, RF-07)
+
+| Archivo | Qué hace |
+| --- | --- |
+| `app/entidades/movimiento.py` | Nuevo `TransferenciaConCargos` (transferencia + cargos, por composición; `total_cargos_vigentes()`). |
+| `app/repositorios/movimientos.py` | Nuevos `insertar_transferencia`, `insertar_cargo`, `listar_cargos`, `bloquear_cargos` (`FOR UPDATE`), `corregir_transferencia`, `cambiar_fecha_cargos`, `corregir_cargo`; filtro `id_transferencia` en `listar`. |
+| `app/servicios/transferencias.py` | `TransferenciaServicio`: registrar (flujo 5.2 de `ARQUITECTURA.md`: transferencia + cargos en una transacción), corregir, agregar y corregir cargos, anular en cascada (RN-38) y reactivar. |
+| `app/servicios/verificaciones.py` | `VerificadorDeUso`: las comprobaciones de cuenta activa y categoría utilizable salieron de `MovimientoServicio` para compartirlas sin copiar código. |
+| `app/rutas/transferencias.py` | `POST /api/transferencias`, `GET`/`PUT /api/transferencias/<id>`, `POST …/anular`, `…/reactivar`, `…/cargos` y `PUT …/cargos/<id_cargo>`. |
+| `tests/conftest.py` | `Mundo` pasó aquí desde `test_movimientos.py` para compartirlo. |
+
+Orden de los bloqueos, siempre el mismo: transferencia → cargos → cuentas y categorías.
+
+Verificado:
+- `tests/test_transferencias.py` (53 casos): CA-02 (Nequi −200.800, Nubank +200.000, egresos +800,
+  ingresos sin cambio), CA-03 (cargo con categoría de ingreso, de otro usuario, y una falla técnica
+  simulada en el segundo cargo: en los tres casos no queda nada), CA-04, RN-33 a RN-38, RN-72,
+  RN-12, RN-06 y API.
+- **Prueba de mutación:** al quitar la transacción de `registrar`, las tres pruebas de CA-03 fallan
+  (quedaban la transferencia y el primer cargo); con ella, pasan.
+- Servidor real (contra `financia_pruebas`): CA-02, CA-03, CA-04, anular desde `/api/movimientos`
+  rechazado y reactivar. Datos de la verificación eliminados.
+- Las pruebas dejan la base de pruebas vacía.
+
+Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
+- **Reactivar una transferencia no reactiva sus cargos**: cada uno se reactiva aparte en
+  `/api/movimientos/<id>/reactivar`. Al anular no se guarda cuáles cargos ya estaban anulados a
+  propósito, y reactivarlos todos podría revivir uno de esos.
+- **Corregir la fecha de una transferencia cambia también la fecha de sus cargos** (RN-35 exige que
+  sea la misma). Corregir el monto no cambia los cargos.
+- **Se puede agregar un cargo a una transferencia ya registrada** (`POST …/cargos`), por si se olvidó
+  el 4×1.000. RF-07 solo habla del formulario de registro.
+- **La API no propone "Impuestos y comisiones"**: la interfaz la encuentra por nombre en el árbol de
+  categorías y la preselecciona (P-19: no tiene protección especial).
+
 ## 4. Lo que NO existe todavía
 
-- Módulos de transferencias, ajustes, bolsillos y resumen: sin repositorios, servicios ni rutas
-  (Tareas 11 a 14).
+- Módulos de ajustes, bolsillos y resumen: sin repositorios, servicios ni rutas (Tareas 12 a 14).
 - No hay datos de prueba (`db/semillas/datos_prueba.sql`).
 - No hay interfaz (`frontend/`).
 - El repositorio Git no tiene remoto (no se ha subido a GitHub).
@@ -239,13 +273,13 @@ Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026*
 | 8 | Cuentas (archivar solo con saldo 0) | **Hecho: 50 pruebas; servidor probado** | RF-02, RF-11, RN-12, CA-15 |
 | 9 | Categorías | **Hecho: 48 pruebas; servidor probado** | RF-03 |
 | 10 | Ingresos, egresos, historial, anular y corregir | **Hecho: 73 pruebas; servidor probado** | RF-04, RF-05, RF-14, RF-16 |
-| 11 | Transferencias con cargos | Pendiente (**esperando aprobación**) | RF-06, RF-07 |
-| 12 | Ajustes de saldo | Pendiente | RF-17 |
+| 11 | Transferencias con cargos | **Hecho: 53 pruebas; servidor probado** | RF-06, RF-07 |
+| 12 | Ajustes de saldo | Pendiente (**esperando aprobación**) | RF-17 |
 | 13 | Bolsillos, metas e historial | Pendiente | RF-08 a RF-10, RF-12 |
 | 14 | Resumen financiero e indicadores | Pendiente | RF-13, RF-15 |
 | 15 | Datos de prueba y pruebas de CA-01 a CA-15 | Pendiente | `REQUISITOS.md`, sección 4 |
 
-**Siguiente paso recomendado:** Tarea 11 (transferencias con cargos), cuando el estudiante la apruebe.
+**Siguiente paso recomendado:** confirmar las cuatro decisiones de la sección 3.9 y luego la Tarea 12 (ajustes de saldo).
 
 ## 6. Decisiones confirmadas por el estudiante (17 y 22 de noviembre de 2026)
 
@@ -309,3 +343,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Confirmadas P-15 a P-19 (categorías: desactivar con subcategorías, reactivar una a una, desactivada no se renombra, 400 si llegan tipo o padre, sin protección especial para "Impuestos y comisiones"). |
 | 2026-11-22 | Tarea 10: ingresos, egresos e historial (`Movimiento`, `MovimientoRepositorio`, `MovimientoServicio`, rutas `/api/movimientos`, `FOR SHARE` en cuentas y categorías); `tests/test_movimientos.py` con carreras reales y pruebas de mutación. Servidor probado. **360 pruebas pasan.** |
 | 2026-11-22 | Confirmadas P-20 a P-24 (una ruta para ingresos y egresos, filtros del historial, categoría desactivada en correcciones y reactivaciones, fechas futuras, sin paginación). |
+| 2026-11-22 | Tarea 11: transferencias con cargos (`TransferenciaServicio`, `VerificadorDeUso`, `TransferenciaConCargos`, rutas `/api/transferencias`); `tests/test_transferencias.py` con CA-02, CA-03 y CA-04 y prueba de mutación de la transacción. Servidor probado. **413 pruebas pasan.** |

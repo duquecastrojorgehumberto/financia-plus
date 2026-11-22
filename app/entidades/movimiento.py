@@ -82,3 +82,24 @@ class MovimientoDetalle:
             "creado_en": m.creado_en.isoformat(),
             "actualizado_en": m.actualizado_en.isoformat(),
         }
+
+
+@dataclass(frozen=True)
+class TransferenciaConCargos:
+    """Una transferencia y sus cargos (RN-34): lo que el usuario ve como UNA operación.
+
+    En la base son varias filas de movimiento; aquí se agrupan (composición).
+    """
+
+    transferencia: MovimientoDetalle
+    cargos: list[MovimientoDetalle]
+
+    def total_cargos_vigentes(self) -> Decimal:
+        return sum((c.movimiento.monto for c in self.cargos if c.movimiento.esta_vigente()), Decimal("0"))
+
+    def datos_publicos(self) -> dict:
+        return {
+            **self.transferencia.datos_publicos(),
+            "cargos": [c.datos_publicos() for c in self.cargos],
+            "total_cargos": f"{self.total_cargos_vigentes():.2f}",
+        }
