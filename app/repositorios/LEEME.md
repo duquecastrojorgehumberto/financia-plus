@@ -28,3 +28,7 @@ Bloqueos que usan los repositorios:
 | Archivo (Tarea 13) | Clase | Estado |
 | --- | --- | --- |
 | `bolsillos.py` | `BolsilloRepositorio`: `listar_con_valor` (valor actual con `DISTINCT ON`), `obtener_con_valor`, `historial`, `obtener_para_actualizar`, `insertar`, `insertar_valor` (solo inserta: el historial no se modifica), `actualizar`, `cambiar_activo` | Hecho (Tarea 13) |
+
+| Archivo (Tarea 14) | Clase | Estado |
+| --- | --- | --- |
+| `resumen.py` | `ResumenRepositorio` (solo lectura): `totales_por_tipo` y `totales_por_categoria` del periodo. El saldo total y el total reservado reutilizan `CuentaRepositorio` y `BolsilloRepositorio` | Hecho (Tarea 14) |

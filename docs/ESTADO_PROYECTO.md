@@ -1,21 +1,22 @@
 # Estado del proyecto — FINANCIA+
 
-Última actualización: 22 de noviembre de 2026 (Tarea 13). **Actualiza este archivo cada vez que termines una tarea.**
+Última actualización: 22 de noviembre de 2026 (Tarea 14). **Actualiza este archivo cada vez que termines una tarea.**
 
 ## 1. Resumen en una frase
 
 La base de datos está creada, migrada (`0001` y `0002`) y probada; la API Flask funciona con
 autenticación, cuentas (saldo calculado; archivar solo con saldo 0), categorías, ingresos, egresos,
-historial, transferencias con cargos, ajustes de saldo y bolsillos con metas, y **483 pruebas
-pasan**. Todavía no hay resumen ni interfaz.
+historial, transferencias con cargos, ajustes de saldo, bolsillos con metas y resumen financiero:
+**todos los módulos de la versión 1, con 506 pruebas que pasan**. Falta la Tarea 15 (datos de
+prueba y cierre) y la interfaz (otra asignatura).
 
 ## 2. Estado por categoría
 
 | Categoría | Qué hay |
 | --- | --- |
-| **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); ingresos, egresos e historial (Tarea 10); transferencias con cargos (Tarea 11); ajustes de saldo (Tarea 12); bolsillos (Tarea 13); 483 pruebas. |
+| **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); ingresos, egresos e historial (Tarea 10); transferencias con cargos (Tarea 11); ajustes de saldo (Tarea 12); bolsillos (Tarea 13); resumen (Tarea 14); 506 pruebas. |
 | **Documentado** | Requisitos (17 RF, 10 RNF, 15 criterios), arquitectura, modelo de datos (6 tablas), reglas de negocio, 21 decisiones (todas confirmadas), auditoría del diseño anterior, categorías por defecto, guía de continuidad, instalación y uso diario en `README.md`. |
-| **Pendiente** | Tareas 14 y 15 (sección 5). La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
+| **Pendiente** | Tarea 15 (sección 5). La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
 
 ## 3. Detalle de lo hecho
 
@@ -313,10 +314,40 @@ Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026*
 - **Cambiar al mismo valor responde 200 con `"registrado": false`** (201 si se agregó un registro).
 - **La fecha objetivo puede estar en el pasado**: los documentos no lo limitan.
 
+### 3.12 Resumen financiero e indicadores (Tarea 14: RF-13, RF-15)
+
+| Archivo | Qué hace |
+| --- | --- |
+| `app/repositorios/resumen.py` | Dos consultas de solo lectura: totales del periodo por tipo (`GROUP BY tipo`) y por categoría, con su raíz (`LEFT JOIN categoria raiz` + `COALESCE`). |
+| `app/servicios/resumen.py` | `ResumenServicio.indicadores` (saldo total de cuentas activas, total reservado de bolsillos activos, disponible y aviso) reutilizando los cálculos de cuentas y bolsillos; `periodo` (ingresos, egresos, balance, ajustes aparte, categorías consolidadas). |
+| `app/rutas/resumen.py` | `GET /api/resumen?desde=&hasta=` → `{indicadores, periodo}`. |
+
+Verificado:
+- `tests/test_resumen.py` (23 casos): CA-10 (disponible −50.000 con aviso; después se sigue
+  reservando y gastando), CA-12 (Alimentación 50.000 = 20.000 directos + Mercado 30.000), RN-60 a
+  RN-64, RN-53, RN-27 (la suma de las raíces es igual al total de egresos) y, desde el resumen,
+  CA-01, CA-02, CA-11 y CA-14.
+- **Pruebas de mutación:** sin la consolidación en la raíz fallan 2 pruebas; sin el filtro
+  `estado = 'VIGENTE'` falla 1. Con el código correcto, pasan todas.
+- Servidor real (contra `financia_pruebas`) con ingresos, egresos en raíz y subcategoría, una
+  transferencia con cargo, un ajuste y un bolsillo: indicadores (saldo 299.000, reservado 350.000,
+  disponible −51.000 con aviso), egresos 50.400 (incluye el cargo, no la transferencia), ajuste
+  aparte (600) y Alimentación consolidada. Datos de la verificación eliminados.
+- Las pruebas dejan la base de pruebas vacía.
+
+Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
+- **Una sola ruta** (`GET /api/resumen`) devuelve los indicadores y el resumen del periodo.
+- **Sin fechas, el periodo es el mes actual completo** (del día 1 al último día).
+- **Los indicadores son del momento actual**: no dependen del periodo elegido.
+- **En los totales por categoría solo aparecen las que tienen movimientos en el periodo**,
+  ordenadas de mayor a menor total, con su parte **"directo"** (movimientos asignados a la raíz
+  misma) separada de sus subcategorías.
+- **El balance es ingresos − egresos**; los ajustes se muestran aparte y no entran (RN-53).
+
 ## 4. Lo que NO existe todavía
 
-- El resumen financiero (saldo total, total reservado, disponible, ingresos y egresos del
-  periodo, totales por categoría): Tarea 14.
+- Datos de prueba (`db/semillas/datos_prueba.sql`) y cierre del proyecto: Tarea 15.
+- La interfaz (`frontend/`), que se desarrolla en otra asignatura.
 - No hay datos de prueba (`db/semillas/datos_prueba.sql`).
 - No hay interfaz (`frontend/`).
 - El repositorio Git no tiene remoto (no se ha subido a GitHub).
@@ -339,10 +370,10 @@ Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026*
 | 11 | Transferencias con cargos | **Hecho: 53 pruebas; servidor probado** | RF-06, RF-07 |
 | 12 | Ajustes de saldo | **Hecho: 28 pruebas; servidor probado** | RF-17 |
 | 13 | Bolsillos, metas e historial | **Hecho: 42 pruebas; servidor probado** | RF-08 a RF-10, RF-12 |
-| 14 | Resumen financiero e indicadores | Pendiente (**esperando aprobación**) | RF-13, RF-15 |
-| 15 | Datos de prueba y pruebas de CA-01 a CA-15 | Pendiente | `REQUISITOS.md`, sección 4 |
+| 14 | Resumen financiero e indicadores | **Hecho: 23 pruebas; servidor probado** | RF-13, RF-15 |
+| 15 | Datos de prueba y pruebas de CA-01 a CA-15 | Pendiente (**esperando aprobación**). Las pruebas de CA-01 a CA-15 ya existen y pasan; falta el archivo de datos de prueba. | `REQUISITOS.md`, sección 4 |
 
-**Siguiente paso recomendado:** Tarea 14 (resumen financiero), cuando el estudiante la apruebe.
+**Siguiente paso recomendado:** confirmar las cinco decisiones de la sección 3.12 y luego la Tarea 15 (datos de prueba y cierre).
 
 ## 6. Decisiones confirmadas por el estudiante (17 y 22 de noviembre de 2026)
 
@@ -427,3 +458,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Confirmadas P-29 a P-33 (ajustes: solo fecha y motivo se corrigen, fecha por defecto hoy, saldo real negativo, 200 sin diferencia, ruta bajo la cuenta). |
 | 2026-11-22 | Tarea 13: bolsillos y metas (`Bolsillo`, `BolsilloConValor`, `BolsilloRepositorio` con `DISTINCT ON`, `BolsilloServicio`, rutas `/api/bolsillos`); `tests/test_bolsillos.py` con CA-07, CA-08, CA-09 y prueba de mutación del desempate. Servidor probado. **483 pruebas pasan.** |
 | 2026-11-22 | Confirmadas P-34 a P-39 (bolsillos: archivado no se edita, PUT reemplaza todo, progreso en porcentaje, detalle con historial, 200 sin cambio, fecha objetivo libre). |
+| 2026-11-22 | Tarea 14: resumen financiero e indicadores (`ResumenRepositorio`, `ResumenServicio`, `GET /api/resumen`); `tests/test_resumen.py` con CA-10 y CA-12 y pruebas de mutación. Servidor probado. **506 pruebas pasan.** |

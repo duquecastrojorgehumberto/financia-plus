@@ -21,6 +21,7 @@ from app.rutas.bolsillos import bolsillos_bp
 from app.rutas.categorias import categorias_bp
 from app.rutas.cuentas import cuentas_bp
 from app.rutas.movimientos import movimientos_bp
+from app.rutas.resumen import resumen_bp
 from app.rutas.salud import salud_bp
 from app.rutas.transferencias import transferencias_bp
 
@@ -59,4 +60,5 @@ def create_app(config: Config | None = None, bd: BaseDatos | None = None) -> Fla
     app.register_blueprint(transferencias_bp)
     app.register_blueprint(ajustes_bp)
     app.register_blueprint(bolsillos_bp)
+    app.register_blueprint(resumen_bp)
     return app

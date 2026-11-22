@@ -5,8 +5,9 @@ Datos 1 (UTP, Colombia).
 
 > **Estado: base de datos creada, migrada (`0001` y `0002`) y probada; esqueleto de la API
 > Flask funcionando con autenticación, cuentas (saldo calculado, archivar con saldo 0),
-> categorías, ingresos, egresos, historial, transferencias con cargos, ajustes de saldo y
-> bolsillos con metas. Todavía no hay resumen ni interfaz.** El detalle está en
+> categorías, ingresos, egresos, historial, transferencias con cargos, ajustes de saldo,
+> bolsillos con metas y resumen financiero: todos los módulos de la versión 1. Falta la
+> interfaz (otra asignatura) y los datos de prueba (Tarea 15).** El detalle está en
 > [`docs/ESTADO_PROYECTO.md`](docs/ESTADO_PROYECTO.md).
 
 ## Qué hace (versión 1)

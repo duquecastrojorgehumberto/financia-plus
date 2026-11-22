@@ -13,6 +13,7 @@ Una clase por módulo. Aquí viven las reglas de `docs/REGLAS_NEGOCIO.md` marcad
 | `transferencias.py` | `TransferenciaServicio`: `registrar` (transferencia + cargos en una transacción), `obtener`, `corregir`, `agregar_cargo`, `corregir_cargo`, `anular` (en cascada), `reactivar` | Hecho (Tarea 11) |
 | `ajustes.py` | `AjusteServicio`: `ajustar` (saldo real → ajuste por la diferencia, bloqueando la cuenta), `corregir` (fecha y motivo). `ResultadoAjuste` | Hecho (Tarea 12) |
 | `bolsillos.py` | `BolsilloServicio`: `listar`, `obtener`, `historial`, `crear` (con su primer valor, RN-45), `editar`, `cambiar_valor` (RN-44, RN-46), `archivar`, `reactivar` | Hecho (Tarea 13) |
+| `resumen.py` | `ResumenServicio`: `indicadores` (RN-60 a RN-63) y `periodo` (RN-64, RN-53, RN-27). `Indicadores`, `ResumenPeriodo`, `TotalCategoria` | Hecho (Tarea 14) |
 | `verificaciones.py` | `VerificadorDeUso`: cuenta activa y categoría utilizable, con `FOR SHARE`. Lo contienen `MovimientoServicio` y `TransferenciaServicio` (composición, sin copiar código) | Hecho (Tarea 11) |
 | `validaciones.py` | `validar_dinero`: monto o saldo con máximo 2 decimales y dentro de `numeric(14,2)` | Hecho (Tarea 10) |
 | `cuentas.py` | `CuentaServicio`: `listar`, `obtener`, `crear`, `editar` (RN-13), `archivar` (solo con saldo 0, bloqueando la fila), `reactivar` | Hecho (Tarea 8) |
