@@ -9,8 +9,8 @@ el desarrollo de FINANCIA+ **sin repetir el análisis y sin reinterpretar el dis
   sesión, pesos colombianos.
 - **Para quién trabajas:** un estudiante de Base de Datos 1 que empieza a programar. Debe
   poder entender y sustentar cada archivo. **Simple gana a ingenioso.**
-- **Estado:** documentación completa. La migración `0001` y las pruebas de restricciones están
-  escritas y revisadas a mano, **pero nunca se han ejecutado**. No hay base de datos ni código de aplicación.
+- **Estado:** Tareas 1 a 6 hechas y probadas (bases migradas con `0001` y `0002`, esqueleto
+  de la API funcionando, 161 pruebas). El detalle está en `ESTADO_PROYECTO.md`.
 - **Modelo:** 6 tablas, 0 triggers. Está en `MODELO_DATOS.md`. No lo rediseñes.
 - **Stack:** Python 3.11+ + Flask (API JSON) + psycopg 3 + PostgreSQL. SQL escrito a mano.
   **POO por capas** (entidades, repositorios, servicios). Interfaz aparte: React + Vite + TypeScript en `frontend/` (D-21).
