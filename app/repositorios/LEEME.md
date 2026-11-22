@@ -24,3 +24,7 @@ Bloqueos que usan los repositorios:
 - `FOR UPDATE` (exclusivo): la fila que se va a cambiar. Nadie más la cambia ni la usa hasta el COMMIT.
 - `FOR SHARE` (compartido): la cuenta o categoría que un movimiento va a usar. Varias transacciones
   pueden tenerlo a la vez, pero archivar la cuenta o desactivar la categoría tiene que esperar.
+
+| Archivo (Tarea 13) | Clase | Estado |
+| --- | --- | --- |
+| `bolsillos.py` | `BolsilloRepositorio`: `listar_con_valor` (valor actual con `DISTINCT ON`), `obtener_con_valor`, `historial`, `obtener_para_actualizar`, `insertar`, `insertar_valor` (solo inserta: el historial no se modifica), `actualizar`, `cambiar_activo` | Hecho (Tarea 13) |

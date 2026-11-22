@@ -16,7 +16,8 @@ Pruebas con `pytest` contra una base PostgreSQL de pruebas (`DATABASE_URL_PRUEBA
 | `test_movimientos.py` | Ingresos y egresos, CA-01, CA-05, CA-06, CA-13, CA-14, corregir, anular, reactivar, historial con filtros y carreras reales entre dos conexiones (Tarea 10) | Pasa |
 | `test_transferencias.py` | CA-02, CA-03 (con regla rota y con falla técnica), CA-04, corregir transferencia y cargos, agregar cargos, reactivar (Tarea 11) | Pasa |
 | `test_ajustes.py` | CA-11, aumento, sin diferencia, saldo negativo, corregir, anular y carrera real de RN-55 (Tarea 12) | Pasa |
-| `test_bolsillos.py`, `test_resumen.py` | Servicios y criterios CA-01 a CA-15 | Pendiente |
+| `test_bolsillos.py` | CA-07, CA-08, CA-09, primer valor en la misma transacción, valor igual sin registro, desempate del más reciente, metas, archivar (Tarea 13) | Pasa |
+| `test_resumen.py` | Servicios y criterios CA-01 a CA-15 | Pendiente |
 
 ## Cómo ejecutarlas
 

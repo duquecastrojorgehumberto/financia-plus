@@ -130,6 +130,13 @@ def solo_campos(datos: dict, *permitidos: str) -> None:
         raise ErrorNegocio(f"Campos no permitidos: {', '.join(sobrantes)}.")
 
 
+def dinero_opcional(datos: dict, campo: str) -> Decimal | None:
+    """Un valor de dinero opcional: texto "1000000", o null / ausente."""
+    if datos.get(campo) is None:
+        return None
+    return dinero(datos, campo)
+
+
 def leer_textos(*campos: str) -> dict[str, str]:
     """Devuelve {campo: texto} con los campos pedidos; si falta alguno o no es texto, 400."""
     datos = leer_cuerpo()

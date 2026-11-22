@@ -1,21 +1,21 @@
 # Estado del proyecto — FINANCIA+
 
-Última actualización: 22 de noviembre de 2026 (Tarea 12). **Actualiza este archivo cada vez que termines una tarea.**
+Última actualización: 22 de noviembre de 2026 (Tarea 13). **Actualiza este archivo cada vez que termines una tarea.**
 
 ## 1. Resumen en una frase
 
 La base de datos está creada, migrada (`0001` y `0002`) y probada; la API Flask funciona con
 autenticación, cuentas (saldo calculado; archivar solo con saldo 0), categorías, ingresos, egresos,
-historial, transferencias con cargos y ajustes de saldo, y **441 pruebas pasan**. Todavía no hay
-bolsillos, resumen ni interfaz.
+historial, transferencias con cargos, ajustes de saldo y bolsillos con metas, y **483 pruebas
+pasan**. Todavía no hay resumen ni interfaz.
 
 ## 2. Estado por categoría
 
 | Categoría | Qué hay |
 | --- | --- |
-| **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); ingresos, egresos e historial (Tarea 10); transferencias con cargos (Tarea 11); ajustes de saldo (Tarea 12); 441 pruebas. |
+| **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); ingresos, egresos e historial (Tarea 10); transferencias con cargos (Tarea 11); ajustes de saldo (Tarea 12); bolsillos (Tarea 13); 483 pruebas. |
 | **Documentado** | Requisitos (17 RF, 10 RNF, 15 criterios), arquitectura, modelo de datos (6 tablas), reglas de negocio, 21 decisiones (todas confirmadas), auditoría del diseño anterior, categorías por defecto, guía de continuidad, instalación y uso diario en `README.md`. |
-| **Pendiente** | Tareas 13 a 15 (sección 5). La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
+| **Pendiente** | Tareas 14 y 15 (sección 5). La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
 
 ## 3. Detalle de lo hecho
 
@@ -281,9 +281,42 @@ Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026*
 - **Sin diferencia, la respuesta es 200 con `"ajuste": null`** y no se registra nada (RN-51).
 - **La ruta va bajo la cuenta**: `POST /api/cuentas/<id>/ajustes`.
 
+### 3.11 Bolsillos y metas (Tarea 13: RF-08 a RF-10, RF-12)
+
+| Archivo | Qué hace |
+| --- | --- |
+| `app/entidades/bolsillo.py` | `Bolsillo` (`es_meta()`: tiene monto objetivo, D-08), `ValorBolsillo`, `BolsilloConValor` (bolsillo + valor actual; `progreso_porcentaje()`, RN-48). |
+| `app/repositorios/bolsillos.py` | Valor actual con `DISTINCT ON (id_bolsillo) … ORDER BY id_bolsillo, registrado_en DESC, id_bolsillo_valor DESC` (D-09), historial, insertar bolsillo y valor, editar, archivar. |
+| `app/servicios/bolsillos.py` | `BolsilloServicio`: crear con su primer valor en una transacción (RN-45), editar (genérico ↔ meta), cambiar valor (RN-44; sin registro si es igual, RN-46), archivar con cualquier valor (RN-49), reactivar. |
+| `app/rutas/bolsillos.py` | `GET`/`POST /api/bolsillos`, `GET`/`PUT /api/bolsillos/<id>`, `POST …/valor`, `…/archivar`, `…/reactivar`. |
+
+Verificado:
+- `tests/test_bolsillos.py` (42 casos): CA-07 (35 %, un registro más, ningún saldo ni movimiento
+  cambia), CA-08, CA-09 (una transferencia no toca el bolsillo), RN-41 a RN-49, RN-06 y API.
+- **Desempate del "más reciente" (D-09):** valores guardados en la misma transacción tienen la
+  misma hora; la prueba confirma que el valor actual es el último. **Prueba de mutación:** sin
+  `id_bolsillo_valor DESC` en el orden, el valor actual sale el primero (10 en vez de 5) y la
+  prueba falla.
+- Servidor real (contra `financia_pruebas`): crear meta, CA-07, CA-08, CA-09 con una transferencia
+  real, historial y archivar. Datos de la verificación eliminados.
+- Las pruebas dejan la base de pruebas vacía (también `bolsillo` y `bolsillo_valor`).
+
+Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
+- **Un bolsillo archivado no se edita ni cambia de valor**: primero se reactiva (como cuentas y
+  categorías, P-11 y P-17). Existe la acción **reactivar**; si otro bolsillo activo tiene el mismo
+  nombre, se rechaza.
+- **`PUT /api/bolsillos/<id>` reemplaza todos los datos**: si no se envía `monto_objetivo`, el
+  bolsillo queda genérico (y pierde su fecha objetivo). La interfaz debe enviar siempre la meta
+  que quiere conservar.
+- **El progreso viaja como porcentaje con 2 decimales** (`"35.00"`), o `null` si no es meta.
+- **`GET /api/bolsillos/<id>` trae el historial completo**, del más reciente al más antiguo.
+- **Cambiar al mismo valor responde 200 con `"registrado": false`** (201 si se agregó un registro).
+- **La fecha objetivo puede estar en el pasado**: los documentos no lo limitan.
+
 ## 4. Lo que NO existe todavía
 
-- Módulos de bolsillos y resumen: sin entidades, repositorios, servicios ni rutas (Tareas 13 y 14).
+- El resumen financiero (saldo total, total reservado, disponible, ingresos y egresos del
+  periodo, totales por categoría): Tarea 14.
 - No hay datos de prueba (`db/semillas/datos_prueba.sql`).
 - No hay interfaz (`frontend/`).
 - El repositorio Git no tiene remoto (no se ha subido a GitHub).
@@ -305,11 +338,11 @@ Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026*
 | 10 | Ingresos, egresos, historial, anular y corregir | **Hecho: 73 pruebas; servidor probado** | RF-04, RF-05, RF-14, RF-16 |
 | 11 | Transferencias con cargos | **Hecho: 53 pruebas; servidor probado** | RF-06, RF-07 |
 | 12 | Ajustes de saldo | **Hecho: 28 pruebas; servidor probado** | RF-17 |
-| 13 | Bolsillos, metas e historial | Pendiente (**esperando aprobación**) | RF-08 a RF-10, RF-12 |
-| 14 | Resumen financiero e indicadores | Pendiente | RF-13, RF-15 |
+| 13 | Bolsillos, metas e historial | **Hecho: 42 pruebas; servidor probado** | RF-08 a RF-10, RF-12 |
+| 14 | Resumen financiero e indicadores | Pendiente (**esperando aprobación**) | RF-13, RF-15 |
 | 15 | Datos de prueba y pruebas de CA-01 a CA-15 | Pendiente | `REQUISITOS.md`, sección 4 |
 
-**Siguiente paso recomendado:** Tarea 13 (bolsillos), cuando el estudiante la apruebe.
+**Siguiente paso recomendado:** confirmar las seis decisiones de la sección 3.11 y luego la Tarea 14 (resumen).
 
 ## 6. Decisiones confirmadas por el estudiante (17 y 22 de noviembre de 2026)
 
@@ -386,3 +419,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Confirmadas P-25 a P-28 (reactivar transferencia sin sus cargos, la fecha de los cargos sigue a la transferencia, agregar cargos después, la interfaz preselecciona "Impuestos y comisiones"). |
 | 2026-11-22 | Tarea 12: ajustes de saldo (`AjusteServicio` con `FOR UPDATE`, rutas `/api/cuentas/<id>/ajustes` y `/api/ajustes/<id>`); `tests/test_ajustes.py` con CA-11 y carrera real de RN-55 con prueba de mutación. Servidor probado. **441 pruebas pasan.** |
 | 2026-11-22 | Confirmadas P-29 a P-33 (ajustes: solo fecha y motivo se corrigen, fecha por defecto hoy, saldo real negativo, 200 sin diferencia, ruta bajo la cuenta). |
+| 2026-11-22 | Tarea 13: bolsillos y metas (`Bolsillo`, `BolsilloConValor`, `BolsilloRepositorio` con `DISTINCT ON`, `BolsilloServicio`, rutas `/api/bolsillos`); `tests/test_bolsillos.py` con CA-07, CA-08, CA-09 y prueba de mutación del desempate. Servidor probado. **483 pruebas pasan.** |
