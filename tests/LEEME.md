@@ -17,7 +17,28 @@ Pruebas con `pytest` contra una base PostgreSQL de pruebas (`DATABASE_URL_PRUEBA
 | `test_transferencias.py` | CA-02, CA-03 (con regla rota y con falla técnica), CA-04, corregir transferencia y cargos, agregar cargos, reactivar (Tarea 11) | Pasa |
 | `test_ajustes.py` | CA-11, aumento, sin diferencia, saldo negativo, corregir, anular y carrera real de RN-55 (Tarea 12) | Pasa |
 | `test_bolsillos.py` | CA-07, CA-08, CA-09, primer valor en la misma transacción, valor igual sin registro, desempate del más reciente, metas, archivar (Tarea 13) | Pasa |
+| `test_datos_prueba.py` | Carga `db/semillas/datos_prueba.sql` (y lo deshace) y comprueba cada resultado que promete; los rechazos sobre esos datos (Tarea 15) | Pasa |
 | `test_resumen.py` | Indicadores, CA-10, CA-12 y, vistos desde el resumen, CA-01, CA-02, CA-11 y CA-14 (Tarea 14) | Pasa |
+
+## Criterios de aceptación y dónde se prueban
+
+| Criterio | Qué comprueba | Pruebas |
+| --- | --- | --- |
+| CA-01 | Saldo 100.000 + 50.000 − 20.000 = 130.000 | `test_cuentas`, `test_movimientos`, `test_resumen`, `test_datos_prueba` |
+| CA-02 | Transferencia con cargo de 800 | `test_transferencias`, `test_resumen`, `test_datos_prueba` |
+| CA-03 | Cargo inválido: no queda nada | `test_transferencias` (con prueba de mutación), `test_datos_prueba` |
+| CA-04 | Anular la transferencia y su cargo | `test_transferencias`, `test_datos_prueba` |
+| CA-05 | Egreso con categoría de ingreso | `test_restricciones_bd` (base), `test_movimientos` (servicio), `test_datos_prueba` |
+| CA-06 | Datos de otro usuario | `test_restricciones_bd` (base), `test_movimientos`, `test_transferencias`, `test_datos_prueba` |
+| CA-07 | Meta al 35 % sin tocar cuentas | `test_bolsillos`, `test_datos_prueba` |
+| CA-08 | Valor −1 en un bolsillo | `test_restricciones_bd` (base), `test_bolsillos`, `test_datos_prueba` |
+| CA-09 | Transferencia no cambia un bolsillo | `test_bolsillos`, `test_datos_prueba` |
+| CA-10 | Disponible −50.000 con aviso | `test_resumen`, `test_datos_prueba` |
+| CA-11 | Ajuste de 6.500 sin cambiar egresos | `test_ajustes`, `test_resumen`, `test_datos_prueba` |
+| CA-12 | Alimentación 50.000 con Mercado 30.000 | `test_resumen`, `test_datos_prueba` |
+| CA-13 | Egreso anulado visible en el historial | `test_movimientos`, `test_datos_prueba` |
+| CA-14 | Categoría desactivada con movimientos | `test_categorias`, `test_movimientos`, `test_resumen`, `test_datos_prueba` |
+| CA-15 | Archivar solo con saldo 0 | `test_cuentas`, `test_datos_prueba` |
 
 ## Cómo ejecutarlas
 

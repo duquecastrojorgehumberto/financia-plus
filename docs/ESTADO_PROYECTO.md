@@ -1,22 +1,22 @@
 # Estado del proyecto — FINANCIA+
 
-Última actualización: 22 de noviembre de 2026 (Tarea 14). **Actualiza este archivo cada vez que termines una tarea.**
+Última actualización: 22 de noviembre de 2026 (Tarea 15: cierre de la versión 1). **Actualiza este archivo cada vez que termines una tarea.**
 
 ## 1. Resumen en una frase
 
 La base de datos está creada, migrada (`0001` y `0002`) y probada; la API Flask funciona con
 autenticación, cuentas (saldo calculado; archivar solo con saldo 0), categorías, ingresos, egresos,
-historial, transferencias con cargos, ajustes de saldo, bolsillos con metas y resumen financiero:
-**todos los módulos de la versión 1, con 506 pruebas que pasan**. Falta la Tarea 15 (datos de
-prueba y cierre) y la interfaz (otra asignatura).
+historial, transferencias con cargos, ajustes de saldo, bolsillos con metas y resumen financiero.
+**Las 15 tareas de la guía están terminadas y 522 pruebas pasan.** Hay datos de demostración
+para la sustentación. Lo único que falta es la interfaz React, que se hace en otra asignatura.
 
 ## 2. Estado por categoría
 
 | Categoría | Qué hay |
 | --- | --- |
-| **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); ingresos, egresos e historial (Tarea 10); transferencias con cargos (Tarea 11); ajustes de saldo (Tarea 12); bolsillos (Tarea 13); resumen (Tarea 14); 506 pruebas. |
+| **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); ingresos, egresos e historial (Tarea 10); transferencias con cargos (Tarea 11); ajustes de saldo (Tarea 12); bolsillos (Tarea 13); resumen (Tarea 14); datos de prueba (Tarea 15); 522 pruebas. |
 | **Documentado** | Requisitos (17 RF, 10 RNF, 15 criterios), arquitectura, modelo de datos (6 tablas), reglas de negocio, 21 decisiones (todas confirmadas), auditoría del diseño anterior, categorías por defecto, guía de continuidad, instalación y uso diario en `README.md`. |
-| **Pendiente** | Tarea 15 (sección 5). La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
+| **Pendiente** | Ninguna tarea de la guía. La interfaz React (`frontend/`) es de otra asignatura. | La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
 
 ## 3. Detalle de lo hecho
 
@@ -344,10 +344,47 @@ Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026*
   misma) separada de sus subcategorías.
 - **El balance es ingresos − egresos**; los ajustes se muestran aparte y no entran (RN-53).
 
+### 3.13 Datos de prueba y cierre (Tarea 15)
+
+| Archivo | Qué hace |
+| --- | --- |
+| `db/semillas/datos_prueba.sql` | Tres usuarios ficticios con los escenarios de CA-01 a CA-15, en SQL a mano (solo `INSERT`, dentro de `BEGIN … COMMIT`). El encabezado dice qué debe verse en cada cuenta, bolsillo y resumen. |
+| `scripts/cargar_datos_prueba.py` | Lo carga en la base de desarrollo en una transacción; si los usuarios ya existen, no hace nada. |
+| `tests/test_datos_prueba.py` | Carga el archivo dentro de una transacción, comprueba con los servicios cada valor del encabezado y los rechazos sobre esos datos, y lo deshace. |
+| `README.md` | Nueva sección de rutas de la API y cómo cargar los datos de demostración. |
+| `tests/LEEME.md` | Matriz: qué pruebas cubren cada criterio de aceptación. |
+
+Verificado:
+- `tests/test_datos_prueba.py` (16 casos): el archivo se carga con el rol `financia_app`; saldos,
+  indicadores y resumen de Ana; CA-02, CA-04, CA-07, CA-09 a CA-15 con datos; CA-03, CA-05, CA-06,
+  CA-08 y CA-15 rechazados sobre esos datos; inicio de sesión con la contraseña de demostración; la
+  lista de categorías del archivo es igual a la de `categorias_por_defecto.py`.
+- `cargar_datos_prueba.py` ejecutado dos veces sobre `financia_pruebas`: la primera carga, la
+  segunda no hace nada. Con el servidor real, Ana inicia sesión y ve saldo total 1.032.700,
+  reservado 350.000, egresos de noviembre 90.800, ajustes 6.500 aparte, y archivar Efectivo es
+  rechazado (CA-15). Después se borraron esos datos con `financia_admin`.
+- **No se cargaron datos en la base `financia`**: eso lo decide el estudiante (comando en `README.md`).
+
+Decisiones tomadas en esta tarea, **pendientes de confirmar por el estudiante**:
+- **Contraseña de demostración fija** (`demo-financia-2026`), escrita en el README y en el
+  encabezado del archivo, con su hash en el SQL. Es ficticia y solo para la base local; permite
+  iniciar sesión en la sustentación.
+- **Tres usuarios**: Ana (casi todos los criterios, cada uno en su propia cuenta para que se
+  vean por separado), Beto ("el otro usuario" de CA-06) y Carla (CA-09 y CA-10, que necesitan
+  totales exactos).
+- **El archivo guarda el estado final** de cada escenario (por ejemplo, Daviplata ya archivada y
+  Mascotas ya desactivada con su movimiento anterior). Los criterios que son rechazos no dejan
+  datos: se prueban con la API sobre estos datos.
+- **La lista de categorías por defecto está en dos lugares** (`categorias_por_defecto.py` y el
+  SQL); una prueba avisa si dejan de coincidir.
+
 ## 4. Lo que NO existe todavía
 
-- Datos de prueba (`db/semillas/datos_prueba.sql`) y cierre del proyecto: Tarea 15.
-- La interfaz (`frontend/`), que se desarrolla en otra asignatura.
+- La interfaz (`frontend/`), que se desarrolla en otra asignatura. La API ya ofrece todo lo que
+  necesita (sección de rutas en `README.md`).
+- Lo aplazado por decisión del proyecto (`REQUISITOS.md`, sección 3): facturas, Gmail,
+  presupuestos, recurrentes, tarjetas, renta, notificaciones, auditoría, varias categorías.
+- El repositorio Git no tiene remoto (no se ha subido a GitHub).
 - No hay datos de prueba (`db/semillas/datos_prueba.sql`).
 - No hay interfaz (`frontend/`).
 - El repositorio Git no tiene remoto (no se ha subido a GitHub).
@@ -371,9 +408,9 @@ Decisiones tomadas en esta tarea, **confirmadas por el estudiante el 22/11/2026*
 | 12 | Ajustes de saldo | **Hecho: 28 pruebas; servidor probado** | RF-17 |
 | 13 | Bolsillos, metas e historial | **Hecho: 42 pruebas; servidor probado** | RF-08 a RF-10, RF-12 |
 | 14 | Resumen financiero e indicadores | **Hecho: 23 pruebas; servidor probado** | RF-13, RF-15 |
-| 15 | Datos de prueba y pruebas de CA-01 a CA-15 | Pendiente (**esperando aprobación**). Las pruebas de CA-01 a CA-15 ya existen y pasan; falta el archivo de datos de prueba. | `REQUISITOS.md`, sección 4 |
+| 15 | Datos de prueba y pruebas de CA-01 a CA-15 | **Hecho: 16 pruebas; cargador y servidor probados** | `REQUISITOS.md`, sección 4 |
 
-**Siguiente paso recomendado:** Tarea 15 (datos de prueba y cierre), cuando el estudiante la apruebe.
+**Siguiente paso recomendado:** confirmar las cuatro decisiones de la sección 3.13. Después: cargar los datos de demostración en `financia` para la sustentación y, si se quiere, subir el repositorio a GitHub. La versión 1 de la API está completa.
 
 ## 6. Decisiones confirmadas por el estudiante (17 y 22 de noviembre de 2026)
 
@@ -465,3 +502,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Confirmadas P-34 a P-39 (bolsillos: archivado no se edita, PUT reemplaza todo, progreso en porcentaje, detalle con historial, 200 sin cambio, fecha objetivo libre). |
 | 2026-11-22 | Tarea 14: resumen financiero e indicadores (`ResumenRepositorio`, `ResumenServicio`, `GET /api/resumen`); `tests/test_resumen.py` con CA-10 y CA-12 y pruebas de mutación. Servidor probado. **506 pruebas pasan.** |
 | 2026-11-22 | Confirmadas P-40 a P-44 (resumen: una ruta, mes actual por defecto, indicadores del momento, solo categorías con movimientos, balance sin ajustes). |
+| 2026-11-22 | Tarea 15: datos de prueba (`db/semillas/datos_prueba.sql`, `scripts/cargar_datos_prueba.py`, `tests/test_datos_prueba.py`), matriz de criterios en `tests/LEEME.md` y rutas en `README.md`. **Versión 1 de la API completa: 522 pruebas pasan.** |

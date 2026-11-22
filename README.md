@@ -6,8 +6,8 @@ Datos 1 (UTP, Colombia).
 > **Estado: base de datos creada, migrada (`0001` y `0002`) y probada; esqueleto de la API
 > Flask funcionando con autenticación, cuentas (saldo calculado, archivar con saldo 0),
 > categorías, ingresos, egresos, historial, transferencias con cargos, ajustes de saldo,
-> bolsillos con metas y resumen financiero: todos los módulos de la versión 1. Falta la
-> interfaz (otra asignatura) y los datos de prueba (Tarea 15).** El detalle está en
+> bolsillos con metas y resumen financiero: **las 15 tareas de la guía están terminadas**, con
+> 522 pruebas automáticas. Falta la interfaz React, que se hace en otra asignatura.** El detalle está en
 > [`docs/ESTADO_PROYECTO.md`](docs/ESTADO_PROYECTO.md).
 
 ## Qué hace (versión 1)
@@ -117,3 +117,32 @@ Arrancar la API (queda en http://127.0.0.1:5000; se detiene con Ctrl+C):
 ```
 
 Comprobar que responde: abrir http://127.0.0.1:5000/api/salud debe mostrar `{"bd": "ok"}`.
+
+Cargar los datos de demostración en la base de desarrollo (usuarios `ana@demo.example`,
+`beto@demo.example` y `carla@demo.example`, contraseña `demo-financia-2026`, solo para uso local):
+
+```powershell
+.venv\Scripts\python scripts\cargar_datos_prueba.py
+```
+
+Qué debe verse en cada uno está al inicio de `db/semillas/datos_prueba.sql`.
+
+## Rutas de la API
+
+Todas bajo `/api/`, en JSON. Las que modifican datos exigen `Content-Type: application/json` y el
+encabezado `X-Requested-With: financia`. Todas, salvo registro, inicio de sesión y salud, exigen
+sesión. El dinero viaja como texto (`"150000.50"`) y las fechas como `"AAAA-MM-DD"`.
+
+| Módulo | Rutas | Detalle en |
+| --- | --- | --- |
+| Salud | `GET /api/salud` | `app/rutas/salud.py` |
+| Sesión | `POST /api/registro`; `POST`, `GET`, `DELETE /api/sesion` | `app/rutas/autenticacion.py` |
+| Cuentas | `/api/cuentas`, `/api/cuentas/<id>`, `…/archivar`, `…/reactivar` | `app/rutas/cuentas.py` |
+| Ajustes | `POST /api/cuentas/<id>/ajustes`, `PUT /api/ajustes/<id>` | `app/rutas/ajustes.py` |
+| Categorías | `/api/categorias`, `/api/categorias/<id>`, `…/desactivar`, `…/reactivar` | `app/rutas/categorias.py` |
+| Ingresos, egresos e historial | `/api/movimientos`, `/api/movimientos/<id>`, `…/anular`, `…/reactivar` | `app/rutas/movimientos.py` |
+| Transferencias | `/api/transferencias`, `/api/transferencias/<id>`, `…/anular`, `…/reactivar`, `…/cargos` | `app/rutas/transferencias.py` |
+| Bolsillos | `/api/bolsillos`, `/api/bolsillos/<id>`, `…/valor`, `…/archivar`, `…/reactivar` | `app/rutas/bolsillos.py` |
+| Resumen | `GET /api/resumen?desde=&hasta=` | `app/rutas/resumen.py` |
+
+Cada archivo de rutas explica al inicio sus rutas, qué recibe y qué responde.

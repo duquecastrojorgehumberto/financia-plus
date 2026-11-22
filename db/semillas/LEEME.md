@@ -1,7 +1,7 @@
 # db/semillas/
 
-**Estado: sin archivos todavía.** Las categorías por defecto ya se copian al registrarse
-(Tarea 7), desde `app/servicios/categorias_por_defecto.py`. Aquí irán los datos de prueba (Tarea 15).
+**Estado:** `datos_prueba.sql` hecho (Tarea 15). Las categorías por defecto se copian al
+registrarse (Tarea 7), desde `app/servicios/categorias_por_defecto.py`.
 
 ## Categorías por defecto (RN-26)
 
@@ -36,7 +36,20 @@ usuario puede renombrar, desactivar o agregar.
 "Impuestos y comisiones" debe existir siempre: es la categoría que se propone para los cargos
 de las transferencias.
 
-## Datos de prueba
+## Datos de prueba (`datos_prueba.sql`)
 
-Pendiente (Tarea 15): usuarios ficticios y los escenarios CA-01 a CA-15 de
-`docs/REQUISITOS.md`. Sin datos reales de personas.
+Tres usuarios ficticios (`ana@demo.example`, `beto@demo.example`, `carla@demo.example`) con los
+escenarios de CA-01 a CA-15. Contraseña de los tres, **solo para la demostración local**:
+`demo-financia-2026`. Sin datos de personas reales.
+
+El encabezado del archivo dice qué debe verse en cada cuenta, bolsillo y resumen;
+`tests/test_datos_prueba.py` comprueba cada uno de esos valores.
+
+Cargarlo en la base de desarrollo (se puede ejecutar varias veces: si ya están, no hace nada):
+
+```powershell
+.venv\Scripts\python scripts\cargar_datos_prueba.py
+```
+
+Si cambia la lista de categorías por defecto, hay que cambiarla también en `datos_prueba.sql`
+(la prueba `test_las_categorias_por_defecto_son_las_de_rn26` avisa si no coinciden).
