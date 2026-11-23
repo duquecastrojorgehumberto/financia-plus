@@ -20,7 +20,6 @@ export const COLOR_SIN_COLOR = "#9aa3ad";
 /** Ingresos y egresos del gráfico mensual: los dos primeros colores (no verde y rojo). */
 export const COLOR_INGRESOS = PALETA[0];
 export const COLOR_EGRESOS = PALETA[1];
-export const COLOR_BALANCE = PALETA[6];
 
 // Los mismos valores de estilos.css (--color-texto, --color-suave...). Se repiten aquí
 // porque los gráficos se dibujan en SVG y necesitan el color como valor.

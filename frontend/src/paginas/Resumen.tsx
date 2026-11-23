@@ -5,12 +5,23 @@
 // Abajo, el periodo elegido: ingresos, egresos, balance, los ajustes aparte
 // (RN-53) y los totales por categoría con sus subcategorías (RN-27).
 //
-// La pantalla no calcula nada: todos los números vienen ya calculados de la API.
+// Gráficos: ingresos vs egresos de los últimos 6 meses; egresos por categoría en barras
+// y en un anillo. Debajo quedan las tablas: muestran los mismos datos de forma accesible
+// (se pueden leer con un lector de pantalla y copiar).
+//
+// La pantalla no calcula nada: todos los números (también los porcentajes) vienen ya
+// calculados de la API.
 import { useEffect, useState, type FormEvent } from "react";
 
+import { listarCategorias } from "../api/categorias";
 import { ErrorApi } from "../api/cliente";
-import { consultarResumen } from "../api/resumen";
-import type { RespuestaResumen, TotalCategoria } from "../api/tipos";
+import { consultarMensual, consultarResumen } from "../api/resumen";
+import type { RespuestaResumen, TotalCategoria, TotalMes } from "../api/tipos";
+import { coloresPorId } from "../graficos/colores";
+import { prepararCategorias, prepararMeses } from "../graficos/datos";
+import { GraficoCategorias } from "../graficos/GraficoCategorias";
+import { GraficoDona } from "../graficos/GraficoDona";
+import { GraficoMensual } from "../graficos/GraficoMensual";
 import { esNegativo, formatearDinero, formatearFecha } from "../util/formato";
 
 export function Resumen() {
@@ -19,6 +30,8 @@ export function Resumen() {
   const [cargando, setCargando] = useState(true);
   const [desde, setDesde] = useState("");
   const [hasta, setHasta] = useState("");
+  const [meses, setMeses] = useState<TotalMes[]>([]);
+  const [colores, setColores] = useState<Map<number, string>>(new Map());
 
   async function cargar(fechaDesde?: string, fechaHasta?: string) {
     setCargando(true);
@@ -37,6 +50,14 @@ export function Resumen() {
 
   useEffect(() => {
     void cargar();   // al abrir: el mes actual
+    // Lo que no depende del periodo: los últimos 6 meses y los colores de las categorías
+    // (por orden de creación, con las desactivadas, para que cada una tenga siempre su color).
+    Promise.all([consultarMensual(6), listarCategorias("EGRESO", true)])
+      .then(([totales, ramas]) => {
+        setMeses(totales);
+        setColores(coloresPorId(ramas.map((r) => r.id_categoria)));
+      })
+      .catch((e: unknown) => setError(e instanceof ErrorApi ? e.message : "No se pudieron cargar los gráficos."));
   }, []);
 
   function cambiarPeriodo(evento: FormEvent) {
@@ -49,6 +70,13 @@ export function Resumen() {
       <h1>Resumen</h1>
 
       {resumen && <Indicadores datos={resumen.indicadores} />}
+
+      {meses.length > 0 && (
+        <div className="tarjeta bloque-grafico">
+          <h3>Ingresos y egresos de los últimos 6 meses</h3>
+          <GraficoMensual filas={prepararMeses(meses)} />
+        </div>
+      )}
 
       <form className="filtro-periodo" onSubmit={cambiarPeriodo}>
         <label>
@@ -65,7 +93,7 @@ export function Resumen() {
       </form>
 
       {error && <p className="mensaje-error" role="alert">{error}</p>}
-      {resumen && <Periodo datos={resumen.periodo} />}
+      {resumen && <Periodo datos={resumen.periodo} colores={colores} />}
     </section>
   );
 }
@@ -87,7 +115,8 @@ function Indicadores({ datos }: { datos: RespuestaResumen["indicadores"] }) {
   );
 }
 
-function Periodo({ datos }: { datos: RespuestaResumen["periodo"] }) {
+function Periodo({ datos, colores }: { datos: RespuestaResumen["periodo"]; colores: Map<number, string> }) {
+  const egresos = prepararCategorias(datos.categorias.egresos, colores);
   const hayAjustes = !(datos.ajustes.aumentos === "0.00" && datos.ajustes.disminuciones === "0.00");
   return (
     <>
@@ -106,6 +135,20 @@ function Periodo({ datos }: { datos: RespuestaResumen["periodo"] }) {
           {formatearDinero(datos.ajustes.disminuciones)}.
         </p>
       )}
+      {egresos.length > 0 && (
+        <>
+          <div className="tarjeta bloque-grafico">
+            <h3>Egresos por categoría</h3>
+            <GraficoCategorias filas={egresos} />
+          </div>
+          <div className="tarjeta bloque-grafico">
+            <h3>Distribución de los egresos</h3>
+            <GraficoDona filas={egresos} total={datos.egresos} />
+          </div>
+        </>
+      )}
+      {/* Las mismas cifras en tablas: se leen con un lector de pantalla y se pueden copiar. */}
+      <h2>Detalle</h2>
       <div className="columnas">
         <TablaCategorias titulo="Egresos por categoría" categorias={datos.categorias.egresos} />
         <TablaCategorias titulo="Ingresos por categoría" categorias={datos.categorias.ingresos} />

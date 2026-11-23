@@ -9,8 +9,8 @@ el desarrollo de FINANCIA+ **sin repetir el análisis y sin reinterpretar el dis
   sesión, pesos colombianos.
 - **Para quién trabajas:** un estudiante de Base de Datos 1 que empieza a programar. Debe
   poder entender y sustentar cada archivo. **Simple gana a ingenioso.**
-- **Estado:** las 15 tareas están hechas y probadas (522 pruebas). La versión 1 de la API está
-  completa; lo siguiente es la interfaz React (otra asignatura). Ver `ESTADO_PROYECTO.md`. El detalle está en `ESTADO_PROYECTO.md`.
+- **Estado:** las 15 tareas están hechas y probadas, y la interfaz React está completa, con
+  gráficos. El detalle está en `ESTADO_PROYECTO.md`.
 - **Modelo:** 6 tablas, 0 triggers. Está en `MODELO_DATOS.md`. No lo rediseñes.
 - **Stack:** Python 3.11+ + Flask (API JSON) + psycopg 3 + PostgreSQL. SQL escrito a mano.
   **POO por capas** (entidades, repositorios, servicios). Interfaz aparte: React + Vite + TypeScript en `frontend/` (D-21).

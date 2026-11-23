@@ -1,22 +1,24 @@
 # Estado del proyecto — FINANCIA+
 
-Última actualización: 22 de noviembre de 2026 (Tarea 15: cierre de la versión 1). **Actualiza este archivo cada vez que termines una tarea.**
+Última actualización: 22 de noviembre de 2026 (gráficos del resumen, etapa 3). **Actualiza este archivo cada vez que termines una tarea.**
 
 ## 1. Resumen en una frase
 
 La base de datos está creada, migrada (`0001` y `0002`) y probada; la API Flask funciona con
 autenticación, cuentas (saldo calculado; archivar solo con saldo 0), categorías, ingresos, egresos,
-historial, transferencias con cargos, ajustes de saldo, bolsillos con metas y resumen financiero.
-**Las 15 tareas de la guía están terminadas y 550 pruebas pasan.** Hay datos de demostración
-para la sustentación. Lo único que falta es la interfaz React, que se hace en otra asignatura.
+historial, transferencias con cargos, ajustes de saldo, bolsillos con metas y resumen financiero
+(con porcentajes por categoría y resumen mensual). La interfaz React (`frontend/`) tiene todas las
+pantallas, y el resumen y los bolsillos tienen gráficos. **Las 15 tareas de la guía están
+terminadas; pasan 550 pruebas de la API y 99 de la interfaz.** Hay datos de demostración para la
+sustentación. No falta ninguna parte de la versión 1.
 
 ## 2. Estado por categoría
 
 | Categoría | Qué hay |
 | --- | --- |
-| **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); ingresos, egresos e historial (Tarea 10); transferencias con cargos (Tarea 11); ajustes de saldo (Tarea 12); bolsillos (Tarea 13); resumen (Tarea 14); datos de prueba (Tarea 15); datos para gráficos en el resumen; 550 pruebas. |
+| **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); ingresos, egresos e historial (Tarea 10); transferencias con cargos (Tarea 11); ajustes de saldo (Tarea 12); bolsillos (Tarea 13); resumen (Tarea 14); datos de prueba (Tarea 15); datos para gráficos en el resumen; 550 pruebas. Interfaz React completa (secciones 3.14 a 3.20) con gráficos en el resumen y en los bolsillos (3.21 a 3.23); 99 pruebas de Vitest. |
 | **Documentado** | Requisitos (17 RF, 10 RNF, 15 criterios), arquitectura, modelo de datos (6 tablas), reglas de negocio, 21 decisiones (todas confirmadas), auditoría del diseño anterior, categorías por defecto, guía de continuidad, instalación y uso diario en `README.md`. |
-| **Pendiente** | Ninguna tarea de la guía. La interfaz tiene todas las pantallas (secciones 3.14 a 3.20). | La interfaz React (`frontend/`) se desarrolla en otra asignatura. |
+| **Pendiente** | Ninguna tarea de la guía. Opcional: subir el repositorio a GitHub. |
 
 ## 3. Detalle de lo hecho
 
@@ -631,6 +633,37 @@ orden alfabético (Egresos antes que Ingresos), línea curva del balance que baj
 porcentajes sin decimal ("2 %") en una columna con decimales, y marcas del eje en 2,25 M.
 `npm run build` avisa que el paquete pasa de 500 kB (Recharts); no es un error.
 
+### 3.23 Gráficos del resumen, etapa 3: variantes elegidas e integradas
+
+Elección del estudiante (22/11/2026): **1B, 2A, 3A con el anillo delgado de 3B, 4C**.
+
+| Dónde | Qué se ve |
+| --- | --- |
+| Resumen, arriba | Ingresos vs egresos de los últimos 6 meses (`GraficoMensual`): barras agrupadas, un solo eje Y con marcas redondas, cuadrícula punteada, leyenda arriba en orden fijo. |
+| Resumen, periodo | Egresos por categoría (`GraficoCategorias`): nombre y cifras encima de una barra delgada. Distribución (`GraficoDona`): anillo delgado con el total en el centro y la leyenda al lado (debajo si no cabe). Debajo, bajo el título "Detalle", las tablas de antes (vista accesible de los mismos datos). |
+| Bolsillos, arriba | "Progreso de las metas" (`ProgresoMetas`): una tarjeta por meta con su barra; el detalle aparece al pasar el mouse, al enfocar o al tocar. La barra de cada bolsillo usa el mismo color. |
+
+Cambios:
+- Cada componente quedó solo con la variante elegida (sin la propiedad `variante`). Se borraron
+  `paginas/GaleriaGraficos.tsx`, su ruta y sus estilos.
+- `graficos/eje.ts`: marcas redondas para el eje Y (pasos de 1, 2, 2,5 o 5 por una potencia de 10).
+  La prueba de componentes encontró que, con un máximo de 2,84 M, Recharts marcaba 950 mil, 1,9 M y
+  2,9 M.
+- `graficos/animacion.ts`: sin animación si el sistema pide "reducir el movimiento".
+- La pantalla de Bolsillos pide todos los bolsillos una vez y la casilla de archivados solo filtra
+  (antes volvía a pedirlos), para que el orden de los colores no cambie.
+- Pruebas de componentes con `@testing-library/react` 16.3.3 y `jsdom` 30.1.3 (solo de desarrollo):
+  `graficos.test.tsx` comprueba textos, cifras, orden, colores, leyenda, eje, tooltip de metas y
+  estados vacíos. **99 pruebas de Vitest** (antes 81).
+
+Revisado en el navegador con los datos de Ana (base `financia_pruebas`, vacía al terminar): el
+resumen del mes y de junio a noviembre (10 categorías), los bolsillos con y sin archivados, a 820 y
+375 px, sin textos solapados ni fuera de su tarjeta (comprobado con un script). `npm run build` avisa
+que el paquete pasa de 500 kB (718 kB por Recharts); funciona.
+
+En una base que ya tenía los datos de demostración (por ejemplo `financia`), el historial de junio a
+octubre no aparece: el cargador no vuelve a cargar si los usuarios ya existen.
+
 ## 4. Lo que NO existe todavía
 
 - Lo aplazado por decisión del proyecto (`REQUISITOS.md`, sección 3): facturas, Gmail,
@@ -659,7 +692,7 @@ porcentajes sin decimal ("2 %") en una columna con decimales, y marcas del eje e
 | 15 | Datos de prueba y pruebas de CA-01 a CA-15 | **Hecho: 16 pruebas; cargador y servidor probados** | `REQUISITOS.md`, sección 4 |
 
 | 16 | Interfaz React: las siete pantallas | **Hecho: 57 pruebas (Vitest); cada pantalla probada en el navegador** | RF-01 a RF-17 |
-| 17 | Gráficos del resumen (etapa 1: API; 2: galería; 3: integrar lo elegido) | **Etapas 1 y 2 hechas; falta elegir las variantes** | RF-15 |
+| 17 | Gráficos del resumen y de las metas | **Hecho: 3 etapas; 26 pruebas de la API y 42 de Vitest nuevas** | RF-15, RF-12 |
 
 **Siguiente paso recomendado:** practicar la demostración con los datos de `financia` y, si se quiere, subir el repositorio a GitHub. La versión 1 (API e interfaz) está completa.
 
@@ -768,3 +801,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Interfaz React, paso 7: pantalla de bolsillos y metas. **La interfaz tiene todas las pantallas.** Probada en el navegador contra la base de pruebas. |
 | 2026-11-22 | Gráficos, etapa 1: porcentaje por categoría en `/api/resumen` y `GET /api/resumen/mensual` (SQL con `generate_series`). **548 pruebas pasan.** |
 | 2026-11-22 | Gráficos, etapa 2: más datos de demostración (junio a octubre y dos metas), Recharts 3.10.1 y galería temporal `/galeria-graficos` con las variantes. 550 pruebas y 81 de Vitest. |
+| 2026-11-22 | Gráficos, etapa 3: variantes elegidas (1B, 2A, 3A con anillo delgado, 4C) integradas en Resumen y Bolsillos; galería borrada; pruebas de componentes. 550 pruebas de la API y 99 de Vitest. |

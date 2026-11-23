@@ -1,35 +1,28 @@
-// Distribución de egresos: gráfico de dona con el total en el centro y una leyenda
-// con el nombre, el porcentaje y el monto de cada categoría (mismos colores que las barras).
-//
-// Variantes:
-//   A  Anillo grueso con separación blanca entre porciones; leyenda en lista a un lado.
-//   B  Anillo delgado con esquinas redondeadas y espacio entre porciones; leyenda en dos columnas debajo.
+// Distribución de egresos: anillo delgado con esquinas redondeadas y el total en el centro,
+// con la leyenda al lado (nombre, porcentaje y monto de cada categoría, mismos colores que
+// las barras). En pantallas angostas la leyenda baja debajo del anillo.
 import { Cell, Pie, PieChart, Tooltip } from "recharts";
 
 import { formatearDinero, formatearPorcentajeExacto } from "../util/formato";
+import { debeAnimar } from "./animacion";
 import type { FilaCategoria } from "./datos";
 import { TooltipCategoria, type PropsTooltip } from "./Tooltips";
-
-export type VarianteDona = "A" | "B";
 
 const TAMANO = 220;
 
 interface Propiedades {
   filas: FilaCategoria[];
   total: string;   // el total de egresos del periodo, de la API
-  variante: VarianteDona;
 }
 
-export function GraficoDona({ filas, total, variante }: Propiedades) {
-  const delgada = variante === "B";
+export function GraficoDona({ filas, total }: Propiedades) {
   return (
-    <div className={delgada ? "dona dona-abajo" : "dona"}>
+    <div className="dona">
       <div className="dona-grafico" style={{ width: TAMANO, height: TAMANO }}>
         <PieChart width={TAMANO} height={TAMANO}>
           <Pie data={filas} dataKey="valor" nameKey="nombre" startAngle={90} endAngle={-270}
-               innerRadius={delgada ? 82 : 64} outerRadius={delgada ? 100 : 104}
-               paddingAngle={delgada ? 2 : 0} cornerRadius={delgada ? 4 : 0}
-               stroke="#ffffff" strokeWidth={delgada ? 0 : 2}>
+               innerRadius={82} outerRadius={100} paddingAngle={2} cornerRadius={4} strokeWidth={0}
+               isAnimationActive={debeAnimar()}>
             {filas.map((f) => <Cell key={f.id} fill={f.color} />)}
           </Pie>
           <Tooltip content={(p) => <TooltipCategoria active={p.active}

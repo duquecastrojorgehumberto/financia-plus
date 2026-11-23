@@ -8,7 +8,7 @@ Datos 1 (UTP, Colombia).
 > categorías, ingresos, egresos, historial, transferencias con cargos, ajustes de saldo,
 > bolsillos con metas y resumen financiero: **las 15 tareas de la guía están terminadas**, con
 > 550 pruebas automáticas. La interfaz React (`frontend/`) tiene todas las pantallas,
-> probadas en el navegador contra la API.** El detalle está en
+> probadas en el navegador contra la API, y gráficos en el resumen y en los bolsillos.** El detalle está en
 > [`docs/ESTADO_PROYECTO.md`](docs/ESTADO_PROYECTO.md).
 
 ## Qué hace (versión 1)

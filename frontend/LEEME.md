@@ -2,10 +2,11 @@
 
 **Estado:** completa (pasos 1 a 7) — base del proyecto, conexión con la API, registro, inicio y
 cierre de sesión, y las pantallas de **resumen**, **movimientos**, **transferencias**, **ajustes**,
-**bolsillos**, **cuentas** y **categorías**. Las rutas de la API que usa cada una están en `README.md`.
+**bolsillos**, **cuentas** y **categorías**, con gráficos en el resumen y en los bolsillos. Las rutas
+de la API que usa cada una están en `README.md`.
 
 React + Vite + TypeScript (decisión D-21), con React Router para las pantallas y CSS propio,
-sin librerías de componentes. Consume la API JSON de Flask bajo `/api/`.
+sin librerías de componentes. Los gráficos usan Recharts. Consume la API JSON de Flask bajo `/api/`.
 
 ## Cómo arrancarla (Windows, PowerShell)
 
@@ -44,7 +45,7 @@ Otros comandos (en `frontend/`):
 
 | Comando | Qué hace |
 | --- | --- |
-| `npm test` | Pruebas de la interfaz (Vitest). |
+| `npm test` | Pruebas de la interfaz (Vitest). Los gráficos se prueban en `jsdom`, un navegador simulado. |
 | `npm run verificar-tipos` | Revisa los tipos de TypeScript sin compilar. |
 | `npm run build` | Revisa los tipos y genera la versión final en `dist/`. |
 
@@ -87,6 +88,13 @@ $env:FINANCIA_API = "http://127.0.0.1:5001"; npm run dev
 | `src/util/formato.ts` | Dinero y fechas para mostrar, y el dinero que escribe el usuario ("150000,50" → "150000.50"). Trabaja con texto, sin convertirlo a número. |
 | `src/util/categorias.ts` | Qué categorías ofrecer en un formulario: las activas y, al corregir, la que ya tiene. |
 | `src/util/movimientos.ts` | Cómo se muestra un movimiento (monto con signo, "Cargo de transferencia") y qué botones se le ofrecen. |
+| `src/graficos/colores.ts` | Paleta fija de 8 colores y su versión pastel. El color sigue a la categoría (o al bolsillo) por orden de creación: 1.ª a 8.ª, paleta; 9.ª a 16.ª, pastel; después, gris. |
+| `src/graficos/datos.ts` | Prepara los datos de la API para los gráficos. Único lugar donde el dinero pasa a número, y solo para el largo de las barras. |
+| `src/graficos/GraficoMensual.tsx` | Ingresos vs egresos de los últimos 6 meses (Resumen). |
+| `src/graficos/GraficoCategorias.tsx` | Egresos por categoría en barras, con nombre y cifras encima (Resumen). |
+| `src/graficos/GraficoDona.tsx` | Distribución de los egresos en un anillo con el total en el centro (Resumen). |
+| `src/graficos/ProgresoMetas.tsx` | Progreso de los bolsillos con meta, en tarjetas (Bolsillos). |
+| `src/graficos/Tooltips.tsx`, `eje.ts`, `useAncho.ts`, `animacion.ts` | Tooltips, marcas redondas del eje, ancho disponible y "reducir el movimiento". |
 | `src/estilos.css` | Estilos; colores y medidas en variables al inicio. |
 
 ## Reglas de la interfaz

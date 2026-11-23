@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 
 import { formatearDinero, formatearFecha, formatearPorcentaje, formatearPorcentajeExacto } from "../util/formato";
-import { COLOR_BALANCE, COLOR_EGRESOS, COLOR_INGRESOS } from "./colores";
+import { COLOR_EGRESOS, COLOR_INGRESOS } from "./colores";
 import type { FilaCategoria, FilaMes, FilaMeta } from "./datos";
 
 /** Lo que Recharts le pasa al contenido del tooltip (solo lo que se usa aquí). */
@@ -61,18 +61,12 @@ export function TooltipMes({ active, payload }: PropsTooltip<FilaMes>) {
       <Linea nombre="Ingresos" color={COLOR_INGRESOS} valor={formatearDinero(fila.textos.ingresos)} />
       <Linea nombre="Egresos" color={COLOR_EGRESOS} valor={formatearDinero(fila.textos.egresos)} />
       <div className="tooltip-separador" />
-      <Linea nombre="Balance" color={COLOR_BALANCE} valor={formatearDinero(fila.textos.balance)} />
+      <Linea nombre="Balance" valor={formatearDinero(fila.textos.balance)} />
     </Recuadro>
   );
 }
 
-/** Meta: valor actual, objetivo, porcentaje y fecha. */
-export function TooltipMeta({ active, payload }: PropsTooltip<FilaMeta>) {
-  const fila = payload?.[0]?.payload;
-  if (!active || !fila) return null;
-  return <ContenidoMeta meta={fila} />;
-}
-
+/** Meta: valor actual, objetivo, porcentaje y fecha (en las tarjetas de ProgresoMetas). */
 export function ContenidoMeta({ meta }: { meta: FilaMeta }) {
   return (
     <Recuadro titulo={meta.nombre} color={meta.color}>

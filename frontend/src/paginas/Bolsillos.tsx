@@ -21,6 +21,9 @@ import {
 import { ErrorApi } from "../api/cliente";
 import type { Bolsillo, ValorBolsillo } from "../api/tipos";
 import { CampoDinero } from "../componentes/CampoDinero";
+import { coloresPorId } from "../graficos/colores";
+import { prepararMetas } from "../graficos/datos";
+import { ProgresoMetas } from "../graficos/ProgresoMetas";
 import {
   dineroParaCampo,
   dineroParaEnviar,
@@ -48,7 +51,9 @@ export function Bolsillos() {
 
   async function cargar() {
     try {
-      setBolsillos(await listarBolsillos(verArchivados));
+      // Siempre todos (también los archivados): el color de cada meta sigue al bolsillo por
+      // orden de creación, y ese orden no debe cambiar al mostrar u ocultar los archivados.
+      setBolsillos(await listarBolsillos(true));
     } catch (e) {
       setError(mensajeDe(e));
     } finally {
@@ -57,8 +62,8 @@ export function Bolsillos() {
   }
 
   useEffect(() => {
-    void cargar();
-  }, [verArchivados]);
+    void cargar();   // la casilla de archivados solo filtra lo que ya llegó: no vuelve a pedir nada
+  }, []);
 
   function abrirFormulario(nuevo: Formulario) {
     setError(null);
@@ -69,6 +74,10 @@ export function Bolsillos() {
     setFormulario({ modo: "cerrado" });
     await cargar();
   }
+
+  const colores = coloresPorId(bolsillos.map((b) => b.id_bolsillo));   // el mismo color en el resumen y en la tarjeta
+  const metas = prepararMetas(bolsillos, colores);
+  const mostrados = verArchivados ? bolsillos : bolsillos.filter((b) => b.activo);
 
   return (
     <section>
@@ -82,6 +91,13 @@ export function Bolsillos() {
         Un bolsillo es dinero que aparta mentalmente para algo, sin moverlo de sus cuentas. Lo que reserve
         aquí se resta del <strong>disponible</strong> en el Resumen.
       </p>
+
+      {metas.length > 0 && (
+        <div className="tarjeta bloque-grafico">
+          <h3>Progreso de las metas</h3>
+          <ProgresoMetas filas={metas} />
+        </div>
+      )}
 
       {formulario.modo !== "cerrado" && (
         <FormularioBolsillo
@@ -101,12 +117,12 @@ export function Bolsillos() {
 
       {cargando ? (
         <p className="cargando">Cargando…</p>
-      ) : bolsillos.length === 0 ? (
+      ) : mostrados.length === 0 ? (
         <p className="vacio">Todavía no tiene bolsillos. Cree el primero con "Nuevo bolsillo".</p>
       ) : (
         <div className="lista-tarjetas anchas">
-          {bolsillos.map((b) => (
-            <TarjetaBolsillo key={b.id_bolsillo} bolsillo={b} alCambiar={cargar}
+          {mostrados.map((b) => (
+            <TarjetaBolsillo key={b.id_bolsillo} bolsillo={b} color={colores.get(b.id_bolsillo)} alCambiar={cargar}
                              alEditar={() => abrirFormulario({ modo: "editar", bolsillo: b })} />
           ))}
         </div>
@@ -121,11 +137,12 @@ export function Bolsillos() {
 
 interface PropiedadesTarjeta {
   bolsillo: Bolsillo;
+  color?: string;   // el color del bolsillo (orden de creación), igual que en "Progreso de las metas"
   alCambiar: () => Promise<void>;
   alEditar: () => void;
 }
 
-function TarjetaBolsillo({ bolsillo: b, alCambiar, alEditar }: PropiedadesTarjeta) {
+function TarjetaBolsillo({ bolsillo: b, color, alCambiar, alEditar }: PropiedadesTarjeta) {
   const [cambiando, setCambiando] = useState(false);       // formulario de valor abierto
   const [historial, setHistorial] = useState<ValorBolsillo[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -177,7 +194,7 @@ function TarjetaBolsillo({ bolsillo: b, alCambiar, alEditar }: PropiedadesTarjet
       <span className="cifra-valor">{formatearDinero(b.valor_actual)}</span>
 
       {b.es_meta && b.monto_objetivo !== null && b.progreso_porcentaje !== null && (
-        <Progreso porcentaje={b.progreso_porcentaje} objetivo={b.monto_objetivo} fecha={b.fecha_objetivo} />
+        <Progreso porcentaje={b.progreso_porcentaje} objetivo={b.monto_objetivo} fecha={b.fecha_objetivo} color={color} />
       )}
 
       {cambiando && (
@@ -219,7 +236,14 @@ function TarjetaBolsillo({ bolsillo: b, alCambiar, alEditar }: PropiedadesTarjet
 }
 
 /** Barra de progreso de una meta. El porcentaje viene de la API; puede pasar de 100 (RN-48). */
-function Progreso({ porcentaje, objetivo, fecha }: { porcentaje: string; objetivo: string; fecha: string | null }) {
+interface PropiedadesProgreso {
+  porcentaje: string;
+  objetivo: string;
+  fecha: string | null;
+  color?: string;
+}
+
+function Progreso({ porcentaje, objetivo, fecha, color }: PropiedadesProgreso) {
   // Number() aquí solo decide el ANCHO de la barra (un dibujo), no un valor de dinero.
   const ancho = Math.min(100, Number(porcentaje));
   const cumplida = Number(porcentaje) >= 100;
@@ -227,7 +251,7 @@ function Progreso({ porcentaje, objetivo, fecha }: { porcentaje: string; objetiv
     <div className="progreso">
       <div className="barra" role="progressbar" aria-valuenow={ancho} aria-valuemin={0} aria-valuemax={100}
            aria-label={`Progreso: ${formatearPorcentaje(porcentaje)}`}>
-        <div className={cumplida ? "relleno cumplida" : "relleno"} style={{ width: `${ancho}%` }} />
+        <div className="relleno" style={{ width: `${ancho}%`, background: color }} />
       </div>
       <span className="ayuda">
         {cumplida ? "¡Meta cumplida! " : ""}
