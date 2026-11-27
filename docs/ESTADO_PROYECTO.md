@@ -693,10 +693,26 @@ sin encontrarlas (sin imprimirlas). Después de subir: `.env` no existe en GitHu
 GitHub apunta al mismo commit que el computador. El `README.md` explica cómo descargarlo
 (`git clone` o ZIP) y que la interfaz necesita Node.js.
 
+### 3.26 Revisión del modelo E-R contra las tablas reales
+
+27/11/2026. Un script comparó el diagrama de `docs/MODELO_DATOS.md` con la base real
+(`information_schema` y `pg_constraint`): las **6 entidades** son las 6 tablas y las **10 relaciones**
+son las 10 claves foráneas. Diferencias corregidas en el documento:
+- En `BOLSILLO_VALOR` faltaba `id_usuario` (parte de su clave foránea compuesta hacia `BOLSILLO`).
+- Faltaban las columnas `creado_en` (y `actualizado_en` en `MOVIMIENTO`).
+- La columna `usuario.activo` decía "cuenta de usuario desactivada", que mezclaba USUARIO con CUENTA:
+  ahora dice "usuario desactivado". Se agregó una sección que separa USUARIO (la persona, "la cuenta
+  global") de CUENTA (Nequi, Nubank...), y una tabla que une cada relación con su clave foránea.
+- El encabezado decía que no existía ningún script SQL.
+
+La recuperación de contraseña por correo quedó documentada para la versión 2 (`REQUISITOS.md`, 3.1).
+
 ## 4. Lo que NO existe todavía
 
 - Lo aplazado por decisión del proyecto (`REQUISITOS.md`, sección 3): facturas, Gmail,
   presupuestos, recurrentes, tarjetas, renta, notificaciones, auditoría, varias categorías.
+- "Olvidé mi contraseña" por correo: previsto para la versión 2, con su diseño en `REQUISITOS.md`,
+  sección 3.1. Mientras tanto, `scripts/cambiar_clave.py`.
 - Los scripts SQL de la "Fase 1" anterior (26 tablas) **no forman parte de este proyecto**.
 
 ## 5. Pendiente, en orden sugerido
@@ -832,3 +848,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Gráficos, etapa 3: variantes elegidas (1B, 2A, 3A con anillo delgado, 4C) integradas en Resumen y Bolsillos; galería borrada; pruebas de componentes. 550 pruebas de la API y 99 de Vitest. |
 | 2026-11-27 | `scripts/cambiar_clave.py` para cambiar una contraseña olvidada y listar los correos. 555 pruebas. |
 | 2026-11-27 | Proyecto publicado en GitHub (público): github.com/duquecastrojorgehumberto/financia-plus. README con cómo descargarlo. |
+| 2026-11-27 | Modelo E-R revisado contra la base real y corregido; USUARIO y CUENTA aclarados; recuperación de contraseña documentada para la versión 2. |

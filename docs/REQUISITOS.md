@@ -60,6 +60,24 @@ No se implementa y **no se crean tablas** para:
 - Clasificación automática con inteligencia artificial.
 - División de un movimiento entre varias categorías.
 - Varias monedas.
+- Recuperar la contraseña por correo ("Olvidé mi contraseña"). Ver 3.1.
+
+### 3.1 Previsto para la versión 2: "Olvidé mi contraseña"
+
+Hoy, si alguien olvida su contraseña, quien administra la base le pone una nueva con
+`scripts/cambiar_clave.py`. No se puede "recuperar": solo se guarda el hash (RN-02).
+Se dejó para la versión 2 (decisión del estudiante, 27/11/2026) porque necesita una tabla nueva,
+enviar correos (un servicio externo que cada instalación tendría que configurar) y cuidar
+varios detalles de seguridad. Diseño previsto:
+
+| Pieza | Qué haría |
+| --- | --- |
+| Migración `0003` | Tabla `restablecimiento_clave`: a qué usuario pertenece, el **hash** de un código aleatorio, cuándo vence y cuándo se usó. Sigue las convenciones del modelo (clave compuesta con `id_usuario`, sin borrado). |
+| Envío de correo | Una cuenta de correo para la aplicación (SMTP), con sus datos en el `.env`. En desarrollo puede escribir el enlace en la consola en vez de enviarlo. |
+| `POST /api/clave/olvido` | Recibe un correo. Si existe, crea un código aleatorio largo (`secrets`), guarda solo su hash y envía un enlace. **Siempre responde lo mismo**, exista o no el correo, para no revelar quién está registrado. Con límite de solicitudes. |
+| `POST /api/clave/restablecer` | Recibe el código y la contraseña nueva (mínimo 8 caracteres). Solo si el código existe, no venció (30 a 60 minutos) y no se usó. Lo marca como usado: sirve **una sola vez**. |
+| Interfaz | Enlace "¿Olvidó su contraseña?" en Iniciar sesión y dos pantallas: pedir el enlace y escribir la contraseña nueva. |
+| Pruebas | Código vencido, ya usado o inventado; correo inexistente (misma respuesta); la contraseña vieja deja de servir. |
 
 ## 4. Criterios de aceptación mínimos
 

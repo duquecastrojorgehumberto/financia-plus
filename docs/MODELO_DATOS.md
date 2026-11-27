@@ -1,9 +1,9 @@
 # Modelo de datos — FINANCIA+ versión 1
 
-> Estado: **diseño aprobado para implementar; todavía no existe ningún script SQL.**
-> Este documento es la especificación de la que debe salir la primera migración.
-> Si algo aquí contradice a otro documento, manda `REGLAS_NEGOCIO.md` para las reglas
-> y este archivo para la estructura.
+> Estado: **implementado** en la migración `db/migraciones/0001_esquema_inicial.sql` y
+> comprobado contra la base real (las columnas y las claves foráneas de la sección 1 coinciden
+> con las tablas). Si algo aquí contradice a otro documento, manda `REGLAS_NEGOCIO.md` para las
+> reglas y este archivo para la estructura.
 
 El modelo tiene **6 tablas** y **ningún trigger**. Base de datos: PostgreSQL. Moneda: solo COP.
 
@@ -15,6 +15,22 @@ El modelo tiene **6 tablas** y **ningún trigger**. Base de datos: PostgreSQL. M
 | `movimiento` | Ingresos, egresos, transferencias y ajustes de saldo. |
 | `bolsillo` | Reserva virtual de dinero, con o sin meta. |
 | `bolsillo_valor` | Historial de valores de cada bolsillo. |
+
+### ¿"Usuario" o "Cuenta"? (dos cosas distintas)
+
+En el lenguaje de todos los días, "mi cuenta" puede ser dos cosas. En FINANCIA+ tienen nombres
+distintos y son **entidades distintas**:
+
+| Entidad | Qué es | Ejemplo | Cuántas hay |
+| --- | --- | --- | --- |
+| **USUARIO** | La persona que usa FINANCIA+: con qué correo y contraseña entra. Es "la cuenta global" que contiene todo lo demás. | Ana, con `ana@demo.example` | Una por persona |
+| **CUENTA** | Cada lugar donde la persona tiene dinero de verdad. | Nequi, Nubank, Bancolombia, Efectivo | Varias por usuario (0 o más) |
+
+Por eso la relación es **USUARIO posee CUENTA** (1 a muchos). El total de todas las cuentas de un
+usuario ("saldo total" en el Resumen) **no es una entidad ni una tabla**: se calcula sumando los
+saldos de sus cuentas (D-11), igual que el saldo de cada cuenta se calcula con sus movimientos.
+En este documento, "cuenta" siempre significa CUENTA (Nequi, Nubank...); para la persona se dice
+"usuario".
 
 ## 1. Diagrama entidad-relación
 
@@ -37,6 +53,7 @@ erDiagram
     text correo UK
     text clave_hash
     boolean activo
+    timestamptz creado_en
   }
   CUENTA {
     bigint id_cuenta PK
@@ -45,6 +62,7 @@ erDiagram
     text tipo
     numeric saldo_inicial
     boolean activa
+    timestamptz creado_en
   }
   CATEGORIA {
     bigint id_categoria PK
@@ -53,6 +71,7 @@ erDiagram
     text nombre
     text tipo
     boolean activa
+    timestamptz creado_en
   }
   MOVIMIENTO {
     bigint id_movimiento PK
@@ -66,6 +85,8 @@ erDiagram
     date fecha
     text descripcion
     text estado
+    timestamptz creado_en
+    timestamptz actualizado_en
   }
   BOLSILLO {
     bigint id_bolsillo PK
@@ -75,14 +96,38 @@ erDiagram
     numeric monto_objetivo
     date fecha_objetivo
     boolean activo
+    timestamptz creado_en
   }
   BOLSILLO_VALOR {
     bigint id_bolsillo_valor PK
+    bigint id_usuario FK
     bigint id_bolsillo FK
     numeric valor
     timestamptz registrado_en
   }
 ```
+
+### 1.1 Del diagrama a las tablas: cada relación es una clave foránea
+
+Las 10 relaciones del diagrama son exactamente las 10 claves foráneas de la base. Casi todas
+incluyen `id_usuario` (son **compuestas**): así la base rechaza que un dato de un usuario apunte a
+un dato de otro (sección 3, "Propiedad").
+
+| Relación del diagrama | Clave foránea en la tabla hija | Columnas |
+| --- | --- | --- |
+| USUARIO posee CUENTA | `cuenta` → `usuario` (`fk_cuenta_usuario`) | `id_usuario` |
+| USUARIO define CATEGORIA | `categoria` → `usuario` (`fk_categoria_usuario`) | `id_usuario` |
+| USUARIO organiza BOLSILLO | `bolsillo` → `usuario` (`fk_bolsillo_usuario`) | `id_usuario` |
+| USUARIO registra MOVIMIENTO | `movimiento` → `usuario` (`fk_movimiento_usuario`) | `id_usuario` |
+| CATEGORIA agrupa CATEGORIA | `categoria` → `categoria` (`fk_categoria_padre`) | `id_usuario, id_padre, tipo` (la hija tiene el tipo de su padre) |
+| CUENTA afecta MOVIMIENTO (origen) | `movimiento` → `cuenta` (`fk_movimiento_cuenta`) | `id_usuario, id_cuenta` |
+| CUENTA recibe MOVIMIENTO (destino) | `movimiento` → `cuenta` (`fk_movimiento_cuenta_destino`) | `id_usuario, id_cuenta_destino` |
+| CATEGORIA clasifica MOVIMIENTO | `movimiento` → `categoria` (`fk_movimiento_categoria`) | `id_usuario, id_categoria, tipo` (ingreso con categoría de ingreso; egreso con categoría de egreso) |
+| MOVIMIENTO origina cargos | `movimiento` → `movimiento` (`fk_movimiento_transferencia`) | `id_usuario, id_transferencia, id_cuenta` (el cargo sale de la misma cuenta de origen) |
+| BOLSILLO tiene historial BOLSILLO_VALOR | `bolsillo_valor` → `bolsillo` (`fk_bolsillo_valor_bolsillo`) | `id_usuario, id_bolsillo` |
+
+`bolsillo_valor.id_usuario` no es una relación aparte con USUARIO: es parte de la clave foránea
+compuesta hacia BOLSILLO (por eso en el diagrama no hay una línea USUARIO–BOLSILLO_VALOR).
 
 Observa lo que **no** hay: ninguna línea une `BOLSILLO` con `CUENTA` ni con `MOVIMIENTO`.
 Los bolsillos son independientes de las cuentas y de los movimientos (reglas RN-40 a RN-47).
@@ -134,7 +179,7 @@ Propósito: identifica a la persona y guarda lo mínimo para iniciar sesión.
 | `nombre` | text | No | — | No vacío y sin espacios al inicio ni al final |
 | `correo` | text | No | — | UNIQUE. Se guarda en minúsculas y sin espacios: `CHECK (correo = lower(btrim(correo)))` |
 | `clave_hash` | text | No | — | Hash de la contraseña. Nunca la contraseña |
-| `activo` | boolean | No | `true` | `false` = cuenta de usuario desactivada |
+| `activo` | boolean | No | `true` | `false` = usuario desactivado: no puede iniciar sesión |
 | `creado_en` | timestamptz | No | `now()` | |
 
 No se guarda documento de identidad: solo servía para validar facturas, que están aplazadas.
