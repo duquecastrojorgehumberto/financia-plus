@@ -7,7 +7,7 @@ Datos 1 (UTP, Colombia).
 > Flask funcionando con autenticación, cuentas (saldo calculado, archivar con saldo 0),
 > categorías, ingresos, egresos, historial, transferencias con cargos, ajustes de saldo,
 > bolsillos con metas y resumen financiero: **las 15 tareas de la guía están terminadas**, con
-> 550 pruebas automáticas. La interfaz React (`frontend/`) tiene todas las pantallas,
+> 555 pruebas automáticas. La interfaz React (`frontend/`) tiene todas las pantallas,
 > probadas en el navegador contra la API, y gráficos en el resumen y en los bolsillos.** El detalle está en
 > [`docs/ESTADO_PROYECTO.md`](docs/ESTADO_PROYECTO.md).
 
@@ -127,6 +127,19 @@ Cargar los datos de demostración en la base de desarrollo (usuarios `ana@demo.e
 ```
 
 Qué debe verse en cada uno está al inicio de `db/semillas/datos_prueba.sql`.
+
+Si un usuario olvidó su contraseña: la base no la guarda (solo su hash), así que no se puede
+ver; se reemplaza por una nueva. El script la pide dos veces sin mostrarla:
+
+```powershell
+.venv\Scripts\python scripts\cambiar_clave.py
+```
+
+Si olvidó con qué correo se registró, este muestra el nombre y el correo de cada usuario:
+
+```powershell
+.venv\Scripts\python scripts\cambiar_clave.py --listar
+```
 
 Arrancar la interfaz (con la API encendida en otra ventana). La primera vez, `npm install`:
 

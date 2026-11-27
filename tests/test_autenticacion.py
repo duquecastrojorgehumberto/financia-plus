@@ -4,6 +4,8 @@ Qué verifican
     * Servicio: registro con correo normalizado y contraseña con hash (RN-01,
       RN-02), copia de las categorías por defecto en la misma transacción
       (RN-26), validaciones e inicio de sesión.
+    * Restablecer una contraseña olvidada (scripts/cambiar_clave.py): se guarda
+      solo el hash de la nueva, con la misma regla de longitud que el registro.
     * API: el flujo registro -> ver sesión -> cerrar -> iniciar sesión, con
       la cookie real de Flask, y que un usuario nuevo inicia sesión y ya tiene
       sus categorías (criterio de terminado de la Tarea 7).
@@ -23,7 +25,7 @@ import pytest
 from werkzeug.security import check_password_hash
 
 from app.entidades.categoria import TipoCategoria
-from app.errores import ErrorNegocio, NoAutenticado
+from app.errores import ErrorNegocio, NoAutenticado, NoEncontrado
 from app.repositorios.categorias import CategoriaRepositorio
 from app.servicios.autenticacion import MENSAJE_CREDENCIALES, AutenticacionServicio
 from app.servicios.categorias_por_defecto import CATEGORIAS_POR_DEFECTO
@@ -160,6 +162,55 @@ def test_usuario_desactivado_no_inicia_sesion(servicio, con_tx):
     con_tx.execute("UPDATE usuario SET activo = false WHERE id_usuario = %s", (usuario.id_usuario,))
     with pytest.raises(NoAutenticado, match=MENSAJE_CREDENCIALES):
         servicio.iniciar_sesion(correo, CLAVE)
+
+
+# =====================================================================
+# Restablecer una contraseña olvidada (herramienta de administración)
+# =====================================================================
+
+NUEVA = "nueva-clave-456"
+
+
+def test_restablecer_clave_cambia_la_contrasena(servicio, con_tx):
+    """RN-02: entra con la nueva, ya no con la vieja, y la base guarda solo su hash."""
+    correo = correo_nuevo()
+    usuario = servicio.registrar("Ana", correo, CLAVE)
+    assert servicio.restablecer_clave(f" {correo.upper()} ", NUEVA).id_usuario == usuario.id_usuario
+    assert servicio.iniciar_sesion(correo, NUEVA).id_usuario == usuario.id_usuario
+    with pytest.raises(NoAutenticado):
+        servicio.iniciar_sesion(correo, CLAVE)
+    guardado = con_tx.execute("SELECT clave_hash FROM usuario WHERE id_usuario = %s",
+                              (usuario.id_usuario,)).fetchone()["clave_hash"]
+    assert NUEVA not in guardado and check_password_hash(guardado, NUEVA)
+
+
+def test_restablecer_clave_exige_8_caracteres_y_no_cambia_nada(servicio):
+    correo = correo_nuevo()
+    servicio.registrar("Ana", correo, CLAVE)
+    with pytest.raises(ErrorNegocio, match="al menos 8 caracteres"):
+        servicio.restablecer_clave(correo, "corta")
+    assert servicio.iniciar_sesion(correo, CLAVE)   # la vieja sigue sirviendo
+
+
+def test_restablecer_clave_de_un_correo_inexistente(servicio):
+    with pytest.raises(NoEncontrado, match="No hay ningún usuario con ese correo"):
+        servicio.restablecer_clave(correo_nuevo(), NUEVA)
+
+
+def test_restablecer_clave_solo_cambia_ese_usuario(servicio):
+    ana, beto = correo_nuevo(), correo_nuevo()
+    servicio.registrar("Ana", ana, CLAVE)
+    servicio.registrar("Beto", beto, CLAVE)
+    servicio.restablecer_clave(ana, NUEVA)
+    assert servicio.iniciar_sesion(beto, CLAVE)
+
+
+def test_listar_usuarios_muestra_nombre_y_correo(servicio):
+    correo = correo_nuevo()
+    servicio.registrar("Ana Lista", correo, CLAVE)
+    usuarios = {u.correo: u for u in servicio.listar_usuarios()}
+    assert usuarios[correo].nombre == "Ana Lista"
+    assert "clave_hash" not in repr(usuarios[correo])   # el hash no aparece si se imprime
 
 
 # =====================================================================

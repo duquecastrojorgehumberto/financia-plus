@@ -9,14 +9,14 @@ autenticación, cuentas (saldo calculado; archivar solo con saldo 0), categoría
 historial, transferencias con cargos, ajustes de saldo, bolsillos con metas y resumen financiero
 (con porcentajes por categoría y resumen mensual). La interfaz React (`frontend/`) tiene todas las
 pantallas, y el resumen y los bolsillos tienen gráficos. **Las 15 tareas de la guía están
-terminadas; pasan 550 pruebas de la API y 99 de la interfaz.** Hay datos de demostración para la
+terminadas; pasan 555 pruebas de la API y 99 de la interfaz.** Hay datos de demostración para la
 sustentación. No falta ninguna parte de la versión 1.
 
 ## 2. Estado por categoría
 
 | Categoría | Qué hay |
 | --- | --- |
-| **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); ingresos, egresos e historial (Tarea 10); transferencias con cargos (Tarea 11); ajustes de saldo (Tarea 12); bolsillos (Tarea 13); resumen (Tarea 14); datos de prueba (Tarea 15); datos para gráficos en el resumen; 550 pruebas. Interfaz React completa (secciones 3.14 a 3.20) con gráficos en el resumen y en los bolsillos (3.21 a 3.23); 99 pruebas de Vitest. |
+| **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); ingresos, egresos e historial (Tarea 10); transferencias con cargos (Tarea 11); ajustes de saldo (Tarea 12); bolsillos (Tarea 13); resumen (Tarea 14); datos de prueba (Tarea 15); datos para gráficos en el resumen; `scripts/cambiar_clave.py`; 555 pruebas. Interfaz React completa (secciones 3.14 a 3.20) con gráficos en el resumen y en los bolsillos (3.21 a 3.23); 99 pruebas de Vitest. |
 | **Documentado** | Requisitos (17 RF, 10 RNF, 15 criterios), arquitectura, modelo de datos (6 tablas), reglas de negocio, 21 decisiones (todas confirmadas), auditoría del diseño anterior, categorías por defecto, guía de continuidad, instalación y uso diario en `README.md`. |
 | **Pendiente** | Ninguna tarea de la guía. Opcional: subir el repositorio a GitHub. |
 
@@ -664,6 +664,23 @@ que el paquete pasa de 500 kB (718 kB por Recharts); funciona.
 En una base que ya tenía los datos de demostración (por ejemplo `financia`), el historial de junio a
 octubre no aparece: el cargador no vuelve a cargar si los usuarios ya existen.
 
+### 3.24 Cambiar una contraseña olvidada (herramienta de administración)
+
+Pedido del estudiante (27/11/2026). La versión 1 no tiene "Olvidé mi contraseña" (necesitaría
+enviar correos, que está aplazado). Como la contraseña solo se guarda como hash (RN-02), no se
+puede recuperar: se reemplaza.
+
+| Pieza | Qué hace |
+| --- | --- |
+| `scripts/cambiar_clave.py` | Pide el correo (o lo recibe como argumento) y la contraseña nueva dos veces, sin mostrarla (`getpass`). `--listar` muestra el nombre y el correo de cada usuario, para quien olvidó su correo. Se conecta con `DATABASE_URL` (rol `financia_app`, que ya tenía permiso de UPDATE en `usuario`). |
+| `AutenticacionServicio.restablecer_clave` | Misma regla de longitud que el registro (`_validar_clave`, ahora compartida); guarda solo el hash. A diferencia de iniciar sesión, sí dice si el correo no existe: es una herramienta de administración, no una pantalla. |
+| `UsuarioRepositorio.cambiar_clave_hash` y `listar_todos` | `listar_todos` no filtra por `id_usuario` (como `obtener_por_correo`): solo lo usa el script, nunca una ruta de la API. |
+
+Pruebas: 5 nuevas en `tests/test_autenticacion.py` (**555 en total**). Prueba real del script contra
+`financia_pruebas` con un usuario temporal (borrado al terminar): correo como argumento y
+preguntado, contraseñas distintas, muy corta, correo inexistente, `--listar` sin el hash, y entra
+con la nueva y no con la vieja.
+
 ## 4. Lo que NO existe todavía
 
 - Lo aplazado por decisión del proyecto (`REQUISITOS.md`, sección 3): facturas, Gmail,
@@ -802,3 +819,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Gráficos, etapa 1: porcentaje por categoría en `/api/resumen` y `GET /api/resumen/mensual` (SQL con `generate_series`). **548 pruebas pasan.** |
 | 2026-11-22 | Gráficos, etapa 2: más datos de demostración (junio a octubre y dos metas), Recharts 3.10.1 y galería temporal `/galeria-graficos` con las variantes. 550 pruebas y 81 de Vitest. |
 | 2026-11-22 | Gráficos, etapa 3: variantes elegidas (1B, 2A, 3A con anillo delgado, 4C) integradas en Resumen y Bolsillos; galería borrada; pruebas de componentes. 550 pruebas de la API y 99 de Vitest. |
+| 2026-11-27 | `scripts/cambiar_clave.py` para cambiar una contraseña olvidada y listar los correos. 555 pruebas. |
