@@ -18,7 +18,7 @@ sustentación. No falta ninguna parte de la versión 1.
 | --- | --- |
 | **Implementado y verificado** | Entorno (`.venv` con Python 3.13.2, versiones fijadas); repositorio Git (rama `main`); bases `financia` y `financia_pruebas` con las migraciones `0001` y `0002`; roles `financia_admin` y `financia_app`; `scripts/migrar.py` y `scripts/preparar_bd.py`; esqueleto de la API (`app/`); autenticación (Tarea 7); cuentas (Tarea 8); categorías (Tarea 9); ingresos, egresos e historial (Tarea 10); transferencias con cargos (Tarea 11); ajustes de saldo (Tarea 12); bolsillos (Tarea 13); resumen (Tarea 14); datos de prueba (Tarea 15); datos para gráficos en el resumen; `scripts/cambiar_clave.py`; 555 pruebas. Interfaz React completa (secciones 3.14 a 3.20) con gráficos en el resumen y en los bolsillos (3.21 a 3.23); 99 pruebas de Vitest. |
 | **Documentado** | Requisitos (17 RF, 10 RNF, 15 criterios), arquitectura, modelo de datos (6 tablas), reglas de negocio, 21 decisiones (todas confirmadas), auditoría del diseño anterior, categorías por defecto, guía de continuidad, instalación y uso diario en `README.md`. |
-| **Pendiente** | Ninguna tarea de la guía. Opcional: subir el repositorio a GitHub. |
+| **Pendiente** | Ninguna tarea de la guía. |
 
 ## 3. Detalle de lo hecho
 
@@ -681,11 +681,22 @@ Pruebas: 5 nuevas en `tests/test_autenticacion.py` (**555 en total**). Prueba re
 preguntado, contraseñas distintas, muy corta, correo inexistente, `--listar` sin el hash, y entra
 con la nueva y no con la vieja.
 
+### 3.25 Publicado en GitHub
+
+27/11/2026: repositorio **público** https://github.com/duquecastrojorgehumberto/financia-plus
+(elección del estudiante: público, para que sus compañeros lo descarguen; el correo de autor de los
+commits se deja como está). Remoto `origin`, rama `main` con seguimiento de `origin/main`.
+
+Antes de subir se comprobó que no va nada secreto: `.env` nunca estuvo en un commit (está en
+`.gitignore`) y un script buscó la `SECRET_KEY` y las contraseñas reales del `.env` en los 33 commits
+sin encontrarlas (sin imprimirlas). Después de subir: `.env` no existe en GitHub (404) y `main` de
+GitHub apunta al mismo commit que el computador. El `README.md` explica cómo descargarlo
+(`git clone` o ZIP) y que la interfaz necesita Node.js.
+
 ## 4. Lo que NO existe todavía
 
 - Lo aplazado por decisión del proyecto (`REQUISITOS.md`, sección 3): facturas, Gmail,
   presupuestos, recurrentes, tarjetas, renta, notificaciones, auditoría, varias categorías.
-- El repositorio Git no tiene remoto (no se ha subido a GitHub).
 - Los scripts SQL de la "Fase 1" anterior (26 tablas) **no forman parte de este proyecto**.
 
 ## 5. Pendiente, en orden sugerido
@@ -711,7 +722,7 @@ con la nueva y no con la vieja.
 | 16 | Interfaz React: las siete pantallas | **Hecho: 57 pruebas (Vitest); cada pantalla probada en el navegador** | RF-01 a RF-17 |
 | 17 | Gráficos del resumen y de las metas | **Hecho: 3 etapas; 26 pruebas de la API y 42 de Vitest nuevas** | RF-15, RF-12 |
 
-**Siguiente paso recomendado:** practicar la demostración con los datos de `financia` y, si se quiere, subir el repositorio a GitHub. La versión 1 (API e interfaz) está completa.
+**Siguiente paso recomendado:** practicar la demostración con los datos de `financia`. La versión 1 (API e interfaz) está completa y publicada en GitHub.
 
 ## 6. Decisiones confirmadas por el estudiante (17 y 22 de noviembre de 2026)
 
@@ -820,3 +831,4 @@ D-15 (rol de la aplicación sin permiso DELETE) quedó implementada en la Tarea 
 | 2026-11-22 | Gráficos, etapa 2: más datos de demostración (junio a octubre y dos metas), Recharts 3.10.1 y galería temporal `/galeria-graficos` con las variantes. 550 pruebas y 81 de Vitest. |
 | 2026-11-22 | Gráficos, etapa 3: variantes elegidas (1B, 2A, 3A con anillo delgado, 4C) integradas en Resumen y Bolsillos; galería borrada; pruebas de componentes. 550 pruebas de la API y 99 de Vitest. |
 | 2026-11-27 | `scripts/cambiar_clave.py` para cambiar una contraseña olvidada y listar los correos. 555 pruebas. |
+| 2026-11-27 | Proyecto publicado en GitHub (público): github.com/duquecastrojorgehumberto/financia-plus. README con cómo descargarlo. |

@@ -81,6 +81,20 @@ Cada carpeta de trabajo tiene un `LEEME.md` que explica qué va ahí y en qué e
 
 ## Instalación (Windows)
 
+El código está en GitHub: https://github.com/duquecastrojorgehumberto/financia-plus
+
+Para descargarlo (con Git instalado), en PowerShell:
+
+```powershell
+git clone https://github.com/duquecastrojorgehumberto/financia-plus.git
+```
+
+```powershell
+cd financia-plus
+```
+
+(Sin Git: en la página de GitHub, botón **Code → Download ZIP**, y descomprimir.)
+
 Requisitos: Windows con PowerShell. El script instala con `winget` lo que falte (Python 3.13,
 Git y PostgreSQL 17), crea el entorno virtual, el archivo `.env` con claves aleatorias, los
 roles `financia_admin` (dueño de las tablas) y `financia_app` (el de la aplicación, sin
@@ -89,6 +103,18 @@ las pruebas. Pide la contraseña del usuario `postgres` sin mostrarla y no la gu
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\preparar_windows.ps1
+```
+
+La interfaz necesita además **Node.js** (versión LTS). Si no está instalado:
+
+```powershell
+winget install --id OpenJS.NodeJS.LTS -e
+```
+
+Y la primera vez, en la carpeta `frontend`:
+
+```powershell
+cd frontend; npm install
 ```
 
 Si el entorno virtual deja de funcionar (por ejemplo, al mover la carpeta), se vuelve a crear:
